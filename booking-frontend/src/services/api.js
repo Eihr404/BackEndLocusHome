@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:5028/api/v1';
+// Usamos ruta relativa para que funcione tanto en local como en Render automáticamente
+const API_BASE = '/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE,
