@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Clientes.Business.DTOs.Auth;
 using Microservicio.Clientes.Business.Exceptions;
 using Microservicio.Clientes.Business.Interfaces;
@@ -90,8 +91,10 @@ public class AuthService : IAuthService
         int? colaboradorId = null;
         if (nombreRol == "Colaborador" || nombreRol == "Administrador")
         {
-            var colab = await _unitOfWork.Colaboradores.GetAllAsync();
-            var registroColab = colab.FirstOrDefault(c => c.UsuarioId == usuario.UsuarioId && !c.EliminadoLogico);
+            // Optimizamos: buscamos directamente en la DB
+            var registroColab = await _unitOfWork.Colaboradores.Query()
+                .FirstOrDefaultAsync(c => c.UsuarioId == usuario.UsuarioId && !c.EliminadoLogico);
+
             if (registroColab != null)
             {
                 colaboradorId = registroColab.ColaboradorId;

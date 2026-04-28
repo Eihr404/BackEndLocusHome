@@ -37,8 +37,14 @@ export default function RegisterPage() {
       toast.success('¡Cuenta creada exitosamente! Ahora inicia sesión.');
       navigate('/login');
     } catch (err) {
-      const msg = err.response?.data?.mensaje || err.response?.data?.Mensaje || 'Error al crear la cuenta.';
-      toast.error(msg);
+      const data = err.response?.data;
+      if (data?.errores && data.errores.length > 0) {
+        // Mostrar cada error de validación
+        data.errores.forEach(error => toast.error(error));
+      } else {
+        const msg = data?.mensaje || data?.Mensaje || 'Error al crear la cuenta.';
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }

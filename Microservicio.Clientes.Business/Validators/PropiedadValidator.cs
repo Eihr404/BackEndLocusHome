@@ -8,14 +8,19 @@ public static class PropiedadValidator
     public static void Validar(CrearPropiedadRequest req)
     {
         var errores = new List<string>();
-        if (string.IsNullOrWhiteSpace(req.Nombre))
-            errores.Add("El nombre de la propiedad es obligatorio.");
+        
+        if (string.IsNullOrWhiteSpace(req.Nombre) || req.Nombre.Length < 5)
+            errores.Add("El nombre de la propiedad debe ser descriptivo (mínimo 5 caracteres).");
+            
         if (req.Estrellas < 1 || req.Estrellas > 5)
-            errores.Add("Las estrellas deben estar entre 1 y 5.");
+            errores.Add("La calificación debe estar entre 1 y 5 estrellas.");
+            
         if (req.CiudadId <= 0)
-            errores.Add("La ciudad es obligatoria.");
+            errores.Add("Debes seleccionar una ciudad válida.");
+            
         if (req.ColaboradorId <= 0)
-            errores.Add("El colaborador es obligatorio.");
+            errores.Add("Toda propiedad debe estar vinculada a un colaborador responsable.");
+            
         if (errores.Count > 0)
             throw new ValidationException(errores);
     }

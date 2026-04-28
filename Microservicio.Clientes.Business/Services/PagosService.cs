@@ -3,6 +3,7 @@ using Microservicio.Clientes.Business.Exceptions;
 using Microservicio.Clientes.Business.Interfaces;
 using Microservicio.Clientes.Business.Mappers;
 using Microservicio.Clientes.DataManagement.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Microservicio.Clientes.Business.Services;
 
@@ -15,12 +16,23 @@ public class PagosService : IPagosService
         _unitOfWork = unitOfWork;
     }
 
+    public async Task<IEnumerable<PagoDto>> ObtenerPorClienteAsync(int clienteId)
+    {
+        var entities = await _unitOfWork.Pagos.Query()
+            .Where(p => p.ClienteId == clienteId && !p.EliminadoLogico)
+            .OrderByDescending(p => p.FechaPago)
+            .ToListAsync();
+
+        return entities.Select(PagosBusinessMapper.ToResponse).ToList();
+    }
+
     public async Task<IEnumerable<PagoDto>> ObtenerPagosPorReservaAsync(int reservaId)
     {
-        var pagos = await _unitOfWork.Pagos.GetAllAsync();
-        var pagosDeReserva = pagos.Where(p => p.ReservaId == reservaId);
+        var entities = await _unitOfWork.Pagos.Query()
+            .Where(p => p.ReservaId == reservaId && !p.EliminadoLogico)
+            .ToListAsync();
 
-        return pagosDeReserva.Select(PagosBusinessMapper.ToResponse).ToList();
+        return entities.Select(PagosBusinessMapper.ToResponse).ToList();
     }
 
     public async Task<PagoDto> ProcesarPagoAsync(ProcesarPagoDto dto)
