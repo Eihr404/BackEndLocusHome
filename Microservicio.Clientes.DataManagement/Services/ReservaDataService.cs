@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Clientes.DataManagement.Interfaces;
 using Microservicio.Clientes.DataManagement.Mappers;
 using Microservicio.Clientes.DataManagement.Models;
@@ -18,17 +19,20 @@ public class ReservaDataService : IReservaDataService
 
     public async Task<ReservaDataModel?> ObtenerPorCodigoAsync(string codigo)
     {
-        var todos = await _unitOfWork.Reservas.GetAllAsync();
-        var entity = todos.FirstOrDefault(r => r.CodigoReserva == codigo && !r.EliminadoLogico);
+        // Filtramos en el servidor, no en memoria
+        var entity = await _unitOfWork.Reservas.Query()
+            .FirstOrDefaultAsync(r => r.CodigoReserva == codigo && !r.EliminadoLogico);
         return entity == null ? null : ReservaDataMapper.ToDataModel(entity);
     }
 
     public async Task<IReadOnlyCollection<ReservaDataModel>> ObtenerTodasAsync()
     {
-        var todos = await _unitOfWork.Reservas.GetAllAsync();
-        return todos
+        var entities = await _unitOfWork.Reservas.Query()
             .Where(r => !r.EliminadoLogico)
             .OrderByDescending(r => r.FechaCreacion)
+            .ToListAsync();
+
+        return entities
             .Select(ReservaDataMapper.ToDataModel)
             .ToList()
             .AsReadOnly();
@@ -36,10 +40,12 @@ public class ReservaDataService : IReservaDataService
 
     public async Task<IReadOnlyCollection<ReservaDataModel>> ObtenerPorClienteAsync(int clienteId)
     {
-        var todos = await _unitOfWork.Reservas.GetAllAsync();
-        return todos
+        var entities = await _unitOfWork.Reservas.Query()
             .Where(r => r.ClienteId == clienteId && !r.EliminadoLogico)
             .OrderByDescending(r => r.FechaCreacion)
+            .ToListAsync();
+
+        return entities
             .Select(ReservaDataMapper.ToDataModel)
             .ToList()
             .AsReadOnly();
@@ -50,8 +56,8 @@ public class ReservaDataService : IReservaDataService
         // Auto-Seed de Tarifas: si la habitación no tiene precio, asignar $150 USD por defecto
         foreach (var habId in modelo.HabitacionIds)
         {
-            var tieneTarifa = (await _unitOfWork.Tarifas.GetAllAsync())
-                .Any(t => t.HabitacionId == habId && t.Estado);
+            var tieneTarifa = await _unitOfWork.Tarifas.Query()
+                .AnyAsync(t => t.HabitacionId == habId && t.Estado);
             if (!tieneTarifa)
             {
                 await _unitOfWork.Tarifas.AddAsync(new Microservicio.Cliente.DatAccess.Entities.Core.TarifaEntity
@@ -68,13 +74,15 @@ public class ReservaDataService : IReservaDataService
             }
         }
 
-        // Calcular totales con EF Core (sin stored procedure — compatible PostgreSQL)
-        var todasTarifas = await _unitOfWork.Tarifas.GetAllAsync();
+        // Calcular totales con EF Core (Server-side)
         int numNoches = (modelo.FechaCheckOut - modelo.FechaCheckIn).Days;
+        if (numNoches <= 0) numNoches = 1; // Mínimo 1 noche
 
-        decimal total = todasTarifas
+        var tarifasParaHabitaciones = await _unitOfWork.Tarifas.Query()
             .Where(t => modelo.HabitacionIds.Contains(t.HabitacionId) && t.Estado)
-            .Sum(t => t.PrecioPorNoche * numNoches);
+            .ToListAsync();
+
+        decimal total = tarifasParaHabitaciones.Sum(t => t.PrecioPorNoche * numNoches);
 
         if (total == 0) total = 150m * numNoches * modelo.HabitacionIds.Count;
 
@@ -106,7 +114,7 @@ public class ReservaDataService : IReservaDataService
         // Insertar detalle por habitación
         foreach (var habId in modelo.HabitacionIds)
         {
-            var tarifa = todasTarifas.FirstOrDefault(t => t.HabitacionId == habId && t.Estado);
+            var tarifa = tarifasParaHabitaciones.FirstOrDefault(t => t.HabitacionId == habId && t.Estado);
             decimal precio = tarifa?.PrecioPorNoche ?? 150m;
             await _unitOfWork.ReservaDetalles.AddAsync(
                 new Microservicio.Cliente.DatAccess.Entities.Reservas.ReservaDetalleHabitacionEntity

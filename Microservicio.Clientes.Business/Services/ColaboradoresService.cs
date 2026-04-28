@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Cliente.DatAccess.Entities.Seguridad;
 using Microservicio.Clientes.Business.DTOs.Colaboradores;
 using Microservicio.Clientes.Business.Exceptions;
@@ -18,10 +19,14 @@ public class ColaboradoresService : IColaboradoresService
 
     public async Task<IEnumerable<ColaboradorDto>> ObtenerTodosAsync()
     {
-        var entidades = await _unitOfWork.Colaboradores.GetAllAsync();
-        return entidades.Where(e => !e.EliminadoLogico)
-                        .Select(ColaboradoresBusinessMapper.ToResponse)
-                        .ToList();
+        // Optimizamos: filtramos en la DB antes de traer los datos
+        var entidades = await _unitOfWork.Colaboradores.Query()
+            .Where(e => !e.EliminadoLogico)
+            .ToListAsync();
+
+        return entidades
+            .Select(ColaboradoresBusinessMapper.ToResponse)
+            .ToList();
     }
 
     public async Task<ColaboradorDto> ObtenerPorIdAsync(int id)

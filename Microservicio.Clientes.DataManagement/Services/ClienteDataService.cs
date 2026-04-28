@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Cliente.DatAccess.Entities.Core;
 using Microservicio.Cliente.DatAccess.Repositories.Interfaces;
 using Microservicio.Clientes.DataManagement.Interfaces;
@@ -43,21 +44,35 @@ public class ClienteDataService : IClienteDataService
 
     public async Task<DataPagedResult<ClienteDataModel>> BuscarAsync(ClienteFiltroDataModel filtro)
     {
-        var paged = await _unitOfWork.Clientes.GetPaginadoAsync(filtro.PageNumber, filtro.PageSize);
+        // Optimizamos usando Query() para hacer un JOIN en el servidor (Supabase)
+        // y no traer datos uno por uno (N+1 error)
+        var query = from cliente in _unitOfWork.Clientes.Query()
+                    join usuario in _unitOfWork.Usuarios.Query() on cliente.UsuarioId equals usuario.UsuarioId
+                    where !cliente.EliminadoLogico && !usuario.EliminadoLogico
+                    select new { cliente, usuario };
+
+        // Filtros (Server-side)
+        if (!string.IsNullOrEmpty(filtro.Nombre))
+            query = query.Where(x => x.usuario.NombreCompleto!.Contains(filtro.Nombre));
         
-        var items = new List<ClienteDataModel>();
-        foreach (var cliente in paged.Items)
-        {
-            var usuario = await _unitOfWork.Usuarios.GetByIdAsync(cliente.UsuarioId);
-            if (usuario != null) items.Add(ClienteDataMapper.ToDataModel(cliente, usuario));
-        }
+        if (!string.IsNullOrEmpty(filtro.Email))
+            query = query.Where(x => x.usuario.Email!.Contains(filtro.Email));
+
+        var totalRecords = await query.CountAsync();
+        
+        var results = await query
+            .Skip((filtro.PageNumber - 1) * filtro.PageSize)
+            .Take(filtro.PageSize)
+            .ToListAsync();
+
+        var items = results.Select(x => ClienteDataMapper.ToDataModel(x.cliente, x.usuario)).ToList();
 
         return new DataPagedResult<ClienteDataModel>
         {
             Items        = items.AsReadOnly(),
-            PageNumber   = paged.PageNumber,
-            PageSize     = paged.PageSize,
-            TotalRecords = paged.TotalCount
+            PageNumber   = filtro.PageNumber,
+            PageSize     = filtro.PageSize,
+            TotalRecords = totalRecords
         };
     }
 

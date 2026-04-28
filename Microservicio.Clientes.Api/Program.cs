@@ -52,8 +52,18 @@ builder.Services.AddMassTransit(x =>
 
 // gRPC client removed — availability check now handled in-process via IPropiedadService
 
+// CORS
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowAll", policy => {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
+});
+
 // Build the App
 var app = builder.Build();
+
+app.UseCors("AllowAll"); // Habilitar CORS
+
 
 // ── Pipeline de la aplicación ──────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();   // Primero: captura todos los errores
