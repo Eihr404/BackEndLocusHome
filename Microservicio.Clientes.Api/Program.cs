@@ -10,6 +10,9 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Forzar puerto para evitar errores 502 locales
+builder.WebHost.UseUrls("http://127.0.0.1:5028");
+
 // ── Servicios (capas 1-3 + infraestructura) ────────────────────────────────
 builder.Services.AddBookingServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -66,16 +69,13 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseRateLimiter();
 app.UseCors("AllowAll");
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
-
 app.UseBookingSwagger();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers().RequireRateLimiting("GlobalPolicy");
-app.MapFallbackToFile("index.html");
 
+// En la API pura no necesitamos FallbackToFile porque el Front-end vive en su propio contenedor
 app.Run();
 
 public partial class Program { }
