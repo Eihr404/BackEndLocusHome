@@ -64,23 +64,19 @@ var app = builder.Build();
 
 app.UseCors("AllowAll"); // Habilitar CORS
 
+app.UseDefaultFiles(); // Buscar index.html por defecto
+app.UseStaticFiles();  // Servir archivos de React
 
 // ── Pipeline de la aplicación ──────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();   // Primero: captura todos los errores
 app.UseRateLimiter();                              // Segundo: Rate Limiting
-app.UseBookingSwagger();                           // Swagger en la raíz (/)
-app.UseHttpsRedirection();
-app.UseCors(CorsExtensions.PolicyName);
+app.UseBookingSwagger();                           // Swagger disponible
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers().RequireRateLimiting("GlobalPolicy");
 
-// Map gRPC Services
-app.MapGrpcService<ClientesGrpcService>();
-app.MapGrpcService<Microservicio.Clientes.Api.Grpc.InventarioGrpcServiceImpl>();
-
-// Map GraphQL endpoint (por defecto en /graphql)
-app.MapGraphQL();
+// Redirigir cualquier ruta no encontrada al index.html del Front-end (SPA)
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
