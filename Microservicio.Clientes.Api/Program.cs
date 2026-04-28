@@ -64,8 +64,7 @@ var app = builder.Build();
 
 app.UseCors("AllowAll"); // Habilitar CORS
 
-app.UseDefaultFiles(); // Buscar index.html por defecto
-app.UseStaticFiles();  // Servir archivos de React
+app.UseStaticFiles();  // Servir archivos de React (js, css, imágenes)
 
 // ── Pipeline de la aplicación ──────────────────────────────────────────────
 app.UseMiddleware<ExceptionHandlingMiddleware>();   // Primero: captura todos los errores
