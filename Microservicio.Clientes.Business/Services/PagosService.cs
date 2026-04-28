@@ -18,10 +18,14 @@ public class PagosService : IPagosService
 
     public async Task<IEnumerable<PagoDto>> ObtenerPorClienteAsync(int clienteId)
     {
-        var entities = await _unitOfWork.Pagos.Query()
-            .Where(p => p.ClienteId == clienteId && !p.EliminadoLogico)
-            .OrderByDescending(p => p.FechaPago)
-            .ToListAsync();
+        // Corregido: PagoEntity no tiene ClienteId, hay que unirlo con Reservas
+        var query = from pago in _unitOfWork.Pagos.Query()
+                    join reserva in _unitOfWork.Reservas.Query() on pago.ReservaId equals reserva.ReservaId
+                    where reserva.ClienteId == clienteId && !pago.EliminadoLogico
+                    orderby pago.FechaPago descending
+                    select pago;
+
+        var entities = await query.ToListAsync();
 
         return entities.Select(PagosBusinessMapper.ToResponse).ToList();
     }

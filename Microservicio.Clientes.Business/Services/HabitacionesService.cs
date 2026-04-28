@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Cliente.DatAccess.Entities.Core;
 using Microservicio.Clientes.Business.DTOs.Habitaciones;
 using Microservicio.Clientes.Business.Exceptions;
@@ -22,10 +23,11 @@ public class HabitacionesService : IHabitacionesService
         var propiedad = await _unitOfWork.Propiedades.GetByIdAsync(propiedadId)
             ?? throw new NotFoundException("Propiedad", propiedadId);
 
-        var entidades = await _unitOfWork.Habitaciones.GetAllAsync();
-        var habitacionDePropiedad = entidades.Where(h => h.PropiedadId == propiedadId && !h.EliminadoLogico);
+        var entidades = await _unitOfWork.Habitaciones.Query()
+            .Where(h => h.PropiedadId == propiedadId && !h.EliminadoLogico)
+            .ToListAsync();
 
-        return habitacionDePropiedad.Select(HabitacionesBusinessMapper.ToResponse).ToList();
+        return entidades.Select(HabitacionesBusinessMapper.ToResponse).ToList();
     }
 
     public async Task<HabitacionDto> ObtenerPorIdAsync(int id)

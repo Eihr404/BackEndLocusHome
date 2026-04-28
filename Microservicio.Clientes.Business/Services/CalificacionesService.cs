@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microservicio.Clientes.Business.DTOs.Calificaciones;
 using Microservicio.Clientes.Business.Exceptions;
 using Microservicio.Clientes.Business.Interfaces;
@@ -17,10 +18,11 @@ public class CalificacionesService : ICalificacionesService
 
     public async Task<IEnumerable<CalificacionHotelDto>> ObtenerPorPropiedadAsync(int propiedadId)
     {
-        var calificaciones = await _unitOfWork.CalificacionesHotel.GetAllAsync();
-        var calificacionesProp = calificaciones.Where(c => c.PropiedadId == propiedadId);
+        var entities = await _unitOfWork.CalificacionesHotel.Query()
+            .Where(c => c.PropiedadId == propiedadId)
+            .ToListAsync();
 
-        return calificacionesProp.Select(CalificacionesBusinessMapper.ToResponse).ToList();
+        return entities.Select(CalificacionesBusinessMapper.ToResponse).ToList();
     }
 
     public async Task<CalificacionHotelDto> AgregarCalificacionAsync(CrearCalificacionHotelDto dto)
@@ -37,21 +39,26 @@ public class CalificacionesService : ICalificacionesService
         var reserva = await _unitOfWork.Reservas.GetByIdAsync(dto.ReservaId)
             ?? throw new NotFoundException("Reserva", dto.ReservaId);
 
-        // Solo se puede calificar si la reserva es de ese cliente, para esa propiedad, y está confirmada
+        // Solo se puede calificar si la reserva es de ese cliente, para esa propiedad
         if (reserva.ClienteId != dto.ClienteId || reserva.PropiedadId != dto.PropiedadId)
             throw new BusinessException("La reserva no coincide con el cliente o la propiedad especificada.");
 
         var entidad = CalificacionesBusinessMapper.ToDataModel(dto);
         await _unitOfWork.CalificacionesHotel.AddAsync(entidad);
 
-        // Opcionalmente: Recalcular promedio de calificación de la Propiedad.
-        var calificacionesExistentes = (await _unitOfWork.CalificacionesHotel.GetAllAsync())
-                                        .Where(c => c.PropiedadId == dto.PropiedadId).ToList();
+        // Recalcular promedio de calificación de la Propiedad (Server-side)
+        var totalCalificaciones = await _unitOfWork.CalificacionesHotel.Query()
+            .Where(c => c.PropiedadId == dto.PropiedadId)
+            .CountAsync();
+        
+        var sumaPuntuaciones = await _unitOfWork.CalificacionesHotel.Query()
+            .Where(c => c.PropiedadId == dto.PropiedadId)
+            .SumAsync(c => c.Puntuacion);
 
-        decimal suma = calificacionesExistentes.Sum(c => c.Puntuacion) + dto.Puntuacion;
-        propiedad.CalificacionPromedio = suma / (calificacionesExistentes.Count + 1);
+        propiedad.CalificacionPromedio = (sumaPuntuaciones + dto.Puntuacion) / (totalCalificaciones + 1);
+        propiedad.TotalResenas = totalCalificaciones + 1;
+        
         await _unitOfWork.Propiedades.UpdateAsync(propiedad);
-
         await _unitOfWork.SaveChangesAsync();
 
         return CalificacionesBusinessMapper.ToResponse(entidad);
