@@ -10,8 +10,8 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Forzar puerto para evitar errores 502 locales
-builder.WebHost.UseUrls("http://127.0.0.1:5028");
+// Forzar puerto para despliegue (0.0.0.0 es necesario para Docker/Render)
+builder.WebHost.UseUrls("http://0.0.0.0:5028");
 
 // ── Servicios (capas 1-3 + infraestructura) ────────────────────────────────
 builder.Services.AddBookingServices(builder.Configuration);
