@@ -106,9 +106,11 @@ public class PropiedadDataService : IPropiedadDataService
 
     public async Task<IReadOnlyCollection<PropiedadDataModel>> ObtenerPorColaboradorAsync(int colaboradorId)
     {
-        var todos = await _unitOfWork.Propiedades.GetAllAsync();
-        return todos
+        var entities = await _unitOfWork.Propiedades.Query()
             .Where(p => p.ColaboradorId == colaboradorId && !p.EliminadoLogico)
+            .ToListAsync();
+
+        return entities
             .Select(PropiedadDataMapper.ToDataModel)
             .ToList()
             .AsReadOnly();

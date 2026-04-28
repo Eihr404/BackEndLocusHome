@@ -1,9 +1,20 @@
 import { create } from 'zustand';
 import { jwtDecode } from 'jwt-decode';
 
+const getInitialUser = () => {
+  try {
+    const saved = localStorage.getItem('booking_user');
+    return saved ? JSON.parse(saved) : null;
+  } catch (e) {
+    console.error("Error parsing saved user", e);
+    localStorage.removeItem('booking_user');
+    return null;
+  }
+};
+
 const useAuthStore = create((set) => ({
   token: localStorage.getItem('booking_token') || null,
-  user: JSON.parse(localStorage.getItem('booking_user') || 'null'),
+  user: getInitialUser(),
   isAuthenticated: !!localStorage.getItem('booking_token'),
 
   login: (loginResponse) => {

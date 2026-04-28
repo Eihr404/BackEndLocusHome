@@ -13,6 +13,13 @@ public static class MaestrosBusinessMapper
         PaisId = entity.PaisId
     };
 
+    public static PaisDto ToResponse(PaisEntity entity) => new PaisDto
+    {
+        PaisId = entity.PaisId,
+        Nombre = entity.Nombre ?? string.Empty,
+        CodigoISO = entity.CodigoISO ?? string.Empty
+    };
+
     public static MonedaDto ToResponse(MonedaEntity entity) => new MonedaDto
     {
         MonedaId = entity.MonedaId,

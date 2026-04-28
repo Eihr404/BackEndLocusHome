@@ -62,19 +62,18 @@ builder.Services.AddCors(options => {
 // Build the App
 var app = builder.Build();
 
-app.UseCors("AllowAll"); // Habilitar CORS
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseRateLimiter();
+app.UseCors("AllowAll");
 
-app.UseStaticFiles();  // Servir archivos de React (js, css, imágenes)
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
-// ── Pipeline de la aplicación ──────────────────────────────────────────────
-app.UseMiddleware<ExceptionHandlingMiddleware>();   // Primero: captura todos los errores
-app.UseRateLimiter();                              // Segundo: Rate Limiting
-app.UseBookingSwagger();                           // Swagger disponible
+app.UseBookingSwagger();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers().RequireRateLimiting("GlobalPolicy");
 
-// Redirigir cualquier ruta no encontrada al index.html del Front-end (SPA)
+app.MapControllers().RequireRateLimiting("GlobalPolicy");
 app.MapFallbackToFile("index.html");
 
 app.Run();

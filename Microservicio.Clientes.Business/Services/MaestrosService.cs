@@ -23,6 +23,14 @@ public class MaestrosService : IMaestrosService
         return entidades.Select(MaestrosBusinessMapper.ToResponse).ToList();
     }
 
+    public async Task<IEnumerable<PaisDto>> ObtenerPaisesAsync()
+    {
+        var entidades = await _unitOfWork.Paises.Query()
+            .OrderBy(p => p.Nombre)
+            .ToListAsync();
+        return entidades.Select(MaestrosBusinessMapper.ToResponse).ToList();
+    }
+
     public async Task<IEnumerable<MonedaDto>> ObtenerMonedasAsync()
     {
         var entidades = await _unitOfWork.Monedas.Query().ToListAsync();

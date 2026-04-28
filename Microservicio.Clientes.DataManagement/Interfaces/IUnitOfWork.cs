@@ -22,6 +22,7 @@ public interface IUnitOfWork : IDisposable
     
     // Fase 1: Entidades
     IRepository<CiudadEntity> Ciudades { get; }
+    IRepository<PaisEntity> Paises { get; }
     IRepository<MonedaEntity> Monedas { get; }
     IRepository<TipoAlojamientoEntity> TiposAlojamiento { get; }
     IRepository<CatalogoInstalacionEntity> Instalaciones { get; }

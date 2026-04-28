@@ -29,6 +29,7 @@ public class UnitOfWork : IUnitOfWork
     
     // Fase 1: Entidades
     public IRepository<CiudadEntity> Ciudades { get; }
+    public IRepository<PaisEntity> Paises { get; }
     public IRepository<MonedaEntity> Monedas { get; }
     public IRepository<TipoAlojamientoEntity> TiposAlojamiento { get; }
     public IRepository<CatalogoInstalacionEntity> Instalaciones { get; }
@@ -53,6 +54,7 @@ public class UnitOfWork : IUnitOfWork
         
         // Fase 1
         Ciudades         = new GenericRepository<CiudadEntity>(context);
+        Paises           = new GenericRepository<PaisEntity>(context);
         Monedas          = new GenericRepository<MonedaEntity>(context);
         TiposAlojamiento = new GenericRepository<TipoAlojamientoEntity>(context);
         Instalaciones    = new GenericRepository<CatalogoInstalacionEntity>(context);

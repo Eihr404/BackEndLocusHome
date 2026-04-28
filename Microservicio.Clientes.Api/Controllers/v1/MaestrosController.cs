@@ -25,6 +25,15 @@ public class MaestrosController : ControllerBase
         return Ok(new { exitoso = true, datos = result });
     }
 
+    [HttpGet("paises")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ObtenerPaises()
+    {
+        var result = await _service.ObtenerPaisesAsync();
+        return Ok(new { exitoso = true, datos = result });
+    }
+
     [HttpGet("monedas")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]

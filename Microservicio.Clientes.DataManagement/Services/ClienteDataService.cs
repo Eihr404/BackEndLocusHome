@@ -79,8 +79,8 @@ public class ClienteDataService : IClienteDataService
     public async Task<int> CrearAsync(ClienteDataModel modelo)
     {
         // 1. Obtener o asignar Rol 'Cliente' (ID 2 por defecto si no se encuentra)
-        var roles = await _unitOfWork.Roles.GetAllAsync();
-        var rolCliente = roles.FirstOrDefault(r => r.Nombre == "Cliente");
+        var rolCliente = await _unitOfWork.Roles.Query()
+            .FirstOrDefaultAsync(r => r.Nombre == "Cliente");
         int rolId = rolCliente?.RolId ?? 2;
 
         // 2. Hashear la contraseña

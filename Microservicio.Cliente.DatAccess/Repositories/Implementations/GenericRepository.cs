@@ -18,10 +18,30 @@ namespace Microservicio.Cliente.DatAccess.Repositories.Implementations
         }
 
         public IQueryable<T> Query()
-            => _dbSet.AsQueryable();
+        {
+            try
+            {
+                return _dbSet.AsQueryable();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DB ERROR] Error querying table {typeof(T).Name}: {ex.Message}");
+                return Enumerable.Empty<T>().AsQueryable();
+            }
+        }
 
         public async Task<IEnumerable<T>> GetAllAsync()
-            => await _dbSet.ToListAsync();
+        {
+            try
+            {
+                return await _dbSet.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DB ERROR] Error listing table {typeof(T).Name}: {ex.Message}");
+                return new List<T>();
+            }
+        }
 
         public async Task<T?> GetByIdAsync(int id)
             => await _dbSet.FindAsync(id);
