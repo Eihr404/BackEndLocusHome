@@ -41,7 +41,7 @@ public class ExceptionHandlingMiddleware
             ValidationException ve  => (HttpStatusCode.UnprocessableEntity,  ve.Message,  ve.Errors.ToList()),
             ConflictException   ce  => (HttpStatusCode.Conflict,             ce.Message,  new List<string>()),
             BusinessException   be  => (HttpStatusCode.BadRequest,           be.Message,  new List<string>()),
-            _                       => (HttpStatusCode.InternalServerError, "Ocurrió un error inesperado en el servidor.", new List<string>())
+            _                       => (HttpStatusCode.InternalServerError, $"Error: {ex.Message} | Inner: {ex.InnerException?.Message}", new List<string>())
         };
 
         var response = new ApiErrorResponse
