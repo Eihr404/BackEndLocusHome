@@ -17,7 +17,7 @@ public static class ServiceCollectionExtensions
     {
         // ── Capa 1: DbContext ─────────────────────────────────────────
         services.AddDbContext<BookingDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("BookingDB")));
+            options.UseSqlServer(config.GetConnectionString("BookingDB")));
 
         // ── Capa 2: DataManagement ────────────────────────────────────
         services.AddScoped<IUnitOfWork, UnitOfWork>();

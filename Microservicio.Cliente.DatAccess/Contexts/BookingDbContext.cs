@@ -68,38 +68,12 @@ namespace Microservicio.Cliente.DatAccess.Contexts
             base.OnModelCreating(modelBuilder);
 
             // ── Soporte para PostgreSQL y Fechas UTC ──────────────────────────
-            // Esto asegura que todas las fechas se guarden como UTC en Supabase
-            var dateTimeConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
-                v => v.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(v, DateTimeKind.Utc) : v.ToUniversalTime(),
-                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
-
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                foreach (var property in entityType.GetProperties())
-                {
-                    if (property.ClrType == typeof(DateTime) || property.ClrType == typeof(DateTime?))
-                    {
-                        property.SetValueConverter(dateTimeConverter);
-                    }
-                }
-            }
+            // Eliminado para Azure SQL Database (SQL Server soporta DATETIME2 nativamente)
 
             // Aplicar configuraciones de las entidades
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(BookingDbContext).Assembly);
 
-            // FIX DEFINITIVO: PostgreSQL es case-sensitive. Forzamos todo a minúsculas
-            // para que coincida con las tablas de Supabase.
-            foreach (var entity in modelBuilder.Model.GetEntityTypes())
-            {
-                // Nombre de la tabla en minúsculas
-                entity.SetTableName(entity.GetTableName()!.ToLower());
-
-                foreach (var property in entity.GetProperties())
-                {
-                    // Nombre de la columna en minúsculas
-                    property.SetColumnName(property.GetColumnName().ToLower());
-                }
-            }
+            // Eliminado forzado de minúsculas (SQL Server es case-insensitive)
 
             // ── Usuarios ───────────────────────────────────────────────────
             // Email único
