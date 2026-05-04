@@ -67,13 +67,26 @@ namespace Microservicio.Cliente.DatAccess.Contexts
         {
             base.OnModelCreating(modelBuilder);
 
-            // ── Soporte para PostgreSQL y Fechas UTC ──────────────────────────
-            // Eliminado para Azure SQL Database (SQL Server soporta DATETIME2 nativamente)
-
             // Aplicar configuraciones de las entidades
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(BookingDbContext).Assembly);
 
-            // Eliminado forzado de minúsculas (SQL Server es case-insensitive)
+            // ── SQL Server: Declarar triggers existentes ─────────────────────
+            // EF Core 7+ requiere declarar explícitamente los triggers para que
+            // use la estrategia "sequence" en vez de OUTPUT INSERTED (incompatible con triggers)
+            modelBuilder.Entity<UsuarioEntity>()
+                .ToTable(tb => tb.HasTrigger("trg_Audit_Usuarios"));
+
+            modelBuilder.Entity<ClienteEntity>()
+                .ToTable(tb => tb.HasTrigger("trg_Audit_Clientes"));
+
+            modelBuilder.Entity<PropiedadEntity>()
+                .ToTable(tb => tb.HasTrigger("trg_Audit_Propiedades"));
+
+            modelBuilder.Entity<ReservaEntity>()
+                .ToTable(tb => tb.HasTrigger("trg_Audit_Reservas"));
+
+            modelBuilder.Entity<EncuestaExperienciaEntity>()
+                .ToTable(tb => tb.HasTrigger("trg_Puntos_Encuesta"));
 
             // ── Usuarios ───────────────────────────────────────────────────
             // Email único
@@ -87,8 +100,6 @@ namespace Microservicio.Cliente.DatAccess.Contexts
                 .WithMany()
                 .HasForeignKey(u => u.RolId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // PostgreSQL maneja RETURNING automáticamente — no requiere HasTrigger
         }
     }
 }
