@@ -1,12 +1,10 @@
-﻿using Microservicio.Cliente.DatAccess.Entities.Auditoria;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Microservicio.Cliente.DatAccess.Entities.Reservas
 {
     [Table("ReservaDetalleHabitacion")]
-    public class ReservaDetalleHabitacionEntity : AuditoriaEntity
+    public class ReservaDetalleHabitacionEntity
     {
         public decimal SubTotalHabitacion { get; set; }
         public int ReservaId { get; set; }
@@ -18,5 +16,3 @@ namespace Microservicio.Cliente.DatAccess.Entities.Reservas
         public int DetalleId { get; set; }
     }
 }
-
-

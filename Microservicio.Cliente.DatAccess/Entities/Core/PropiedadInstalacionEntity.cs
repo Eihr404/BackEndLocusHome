@@ -1,11 +1,9 @@
-using Microservicio.Cliente.DatAccess.Entities.Auditoria;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Microservicio.Cliente.DatAccess.Entities.Core
 {
-    public class PropiedadInstalacionEntity : AuditoriaEntity
+    public class PropiedadInstalacionEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -14,4 +12,3 @@ namespace Microservicio.Cliente.DatAccess.Entities.Core
         public int InstalacionId { get; set; }
     }
 }
-

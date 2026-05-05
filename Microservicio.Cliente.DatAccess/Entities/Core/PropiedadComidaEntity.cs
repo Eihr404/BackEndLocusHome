@@ -1,11 +1,9 @@
-using Microservicio.Cliente.DatAccess.Entities.Auditoria;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Microservicio.Cliente.DatAccess.Entities.Core
 {
-    public class PropiedadComidaEntity : AuditoriaEntity
+    public class PropiedadComidaEntity
     {
         public decimal PrecioAdicional { get; set; }
         [Key]
@@ -15,4 +13,3 @@ namespace Microservicio.Cliente.DatAccess.Entities.Core
         public int ComidaId { get; set; }
     }
 }
-

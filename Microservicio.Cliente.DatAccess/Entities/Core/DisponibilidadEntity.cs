@@ -13,6 +13,7 @@ namespace Microservicio.Cliente.DatAccess.Entities.Core
         public DateTime Fecha { get; set; }
         public bool Disponible { get; set; }
         public int HabitacionId { get; set; }
+        public DateTime? FechaModificacion { get; set; }
     }
 }
 

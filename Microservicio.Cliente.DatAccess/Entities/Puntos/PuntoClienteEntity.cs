@@ -1,4 +1,3 @@
-﻿using Microservicio.Cliente.DatAccess.Entities.Auditoria;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Microservicio.Cliente.DatAccess.Entities.Puntos
 {
     [Table("PuntosCliente")]
-    public class PuntoClienteEntity : AuditoriaEntity
+    public class PuntoClienteEntity
     {
         public string? Descripcion { get; set; }
         public string? Tipo { get; set; }
@@ -16,7 +15,7 @@ namespace Microservicio.Cliente.DatAccess.Entities.Puntos
         public int PuntoId { get; set; }
         public int? ReservaId { get; set; }
         public int ClienteId { get; set; }
+        // Solo FechaCreacion existe en la tabla
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
     }
 }
-
-

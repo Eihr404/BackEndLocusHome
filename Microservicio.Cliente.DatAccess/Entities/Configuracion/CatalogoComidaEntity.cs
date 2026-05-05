@@ -1,12 +1,10 @@
-﻿using Microservicio.Cliente.DatAccess.Entities.Auditoria;
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Microservicio.Cliente.DatAccess.Entities.Configuracion
 {
     [Table("CatalogoComidas")]
-    public class CatalogoComidaEntity : AuditoriaEntity
+    public class CatalogoComidaEntity
     {
         public string? Descripcion { get; set; }
         public string? Nombre { get; set; }
@@ -16,5 +14,3 @@ namespace Microservicio.Cliente.DatAccess.Entities.Configuracion
         public int ComidaId { get; set; }
     }
 }
-
-

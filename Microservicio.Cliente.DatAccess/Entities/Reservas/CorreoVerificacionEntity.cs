@@ -1,4 +1,3 @@
-﻿using Microservicio.Cliente.DatAccess.Entities.Auditoria;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Microservicio.Cliente.DatAccess.Entities.Reservas
 {
     [Table("CorreosVerificacion")]
-    public class CorreoVerificacionEntity : AuditoriaEntity
+    public class CorreoVerificacionEntity
     {
         public string? Tipo { get; set; }
         public int UsuarioId { get; set; }
@@ -18,7 +17,7 @@ namespace Microservicio.Cliente.DatAccess.Entities.Reservas
         public bool Verificado { get; set; }
         public DateTime? FechaVerificacion { get; set; }
         public DateTime FechaExpiracion { get; set; }
+        // Columna parcial de auditoría
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
     }
 }
-
-

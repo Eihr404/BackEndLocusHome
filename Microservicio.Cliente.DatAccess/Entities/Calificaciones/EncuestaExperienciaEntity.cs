@@ -1,4 +1,3 @@
-﻿using Microservicio.Cliente.DatAccess.Entities.Auditoria;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Microservicio.Cliente.DatAccess.Entities.Calificaciones
 {
     [Table("EncuestaExperiencia")]
-    public class EncuestaExperienciaEntity : AuditoriaEntity
+    public class EncuestaExperienciaEntity
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -21,7 +20,10 @@ namespace Microservicio.Cliente.DatAccess.Entities.Calificaciones
         public decimal? Servicio { get; set; }
         public decimal? Ubicacion { get; set; }
         public string? Comentarios { get; set; }
+        // Columnas parciales
+        public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+        public string? UsuarioCreacion { get; set; }
+        public bool EliminadoLogico { get; set; } = false;
+        public string? IpOrigen { get; set; }
     }
 }
-
-
