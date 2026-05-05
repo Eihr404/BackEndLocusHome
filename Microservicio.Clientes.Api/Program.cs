@@ -23,10 +23,10 @@ builder.Services.AddBookingSwagger();
 // Rate Limiting (Protección Brute Force)
 builder.Services.AddRateLimiter(options => {
     options.AddFixedWindowLimiter("GlobalPolicy", opt => {
-        opt.PermitLimit = 30; // Máximo 30 peticiones...
+        opt.PermitLimit = 300; // Máximo 300 peticiones...
         opt.Window = TimeSpan.FromSeconds(60); // ...cada 60 segundos
         opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        opt.QueueLimit = 2; // Si se pasan, encolar hasta 2 antes de rechazar
+        opt.QueueLimit = 50; // Si se pasan, encolar hasta 50 antes de rechazar
     });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
