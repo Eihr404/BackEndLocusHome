@@ -1,5 +1,3 @@
-using Microservicio.Clientes.Api.Models.Common;
-using Microservicio.Clientes.Business.Exceptions;
 using System.Net;
 using System.Text.Json;
 
@@ -35,22 +33,20 @@ public class ExceptionHandlingMiddleware
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var (statusCode, mensaje, errores) = ex switch
+        var statusCode = ex switch
         {
-            NotFoundException   nfe => (HttpStatusCode.NotFound,             nfe.Message, new List<string>()),
-            ValidationException ve  => (HttpStatusCode.UnprocessableEntity,  ve.Message,  ve.Errors.ToList()),
-            ConflictException   ce  => (HttpStatusCode.Conflict,             ce.Message,  new List<string>()),
-            BusinessException   be  => (HttpStatusCode.BadRequest,           be.Message,  new List<string>()),
-            _                       => (HttpStatusCode.InternalServerError, $"Error: {ex.Message} | Inner: {ex.InnerException?.Message}", new List<string>())
+            KeyNotFoundException   => HttpStatusCode.NotFound,
+            ArgumentException      => HttpStatusCode.BadRequest,
+            InvalidOperationException => HttpStatusCode.Conflict,
+            _                      => HttpStatusCode.InternalServerError
         };
 
-        var response = new ApiErrorResponse
+        var response = new
         {
-            Exitoso    = false,
-            Mensaje    = mensaje,
-            Errores    = errores,
-            StatusCode = (int)statusCode,
-            TraceId    = context.TraceIdentifier
+            exitoso    = false,
+            mensaje    = ex.Message,
+            statusCode = (int)statusCode,
+            traceId    = context.TraceIdentifier
         };
 
         context.Response.ContentType = "application/json";
