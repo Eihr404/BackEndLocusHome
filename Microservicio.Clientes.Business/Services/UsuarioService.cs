@@ -41,10 +41,18 @@ public class UsuarioService : IUsuarioService
         return c == null ? null : MapCliente(c);
     }
 
-    public async Task<IEnumerable<ClienteResponse>> GetAllClientesAsync()
+    public async Task<IEnumerable<ClienteResponse>> GetAllClientesAsync(int page = 1, int size = 10, string? nombre = null)
     {
         var clientes = await _clienteRepo.GetAllAsync();
-        return clientes.Select(MapCliente);
+
+        if (!string.IsNullOrEmpty(nombre))
+        {
+            clientes = clientes.Where(c => c.Usuario != null && 
+                                           c.Usuario.NombreCompleto.Contains(nombre, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var paginated = clientes.Skip((page - 1) * size).Take(size);
+        return paginated.Select(MapCliente);
     }
 
     /// <summary>
@@ -55,6 +63,54 @@ public class UsuarioService : IUsuarioService
         await _clienteRepo.RegistrarClienteSPAsync(
             request.Email, request.Password, request.NombreCompleto,
             request.Cedula, request.Telefono, request.Domicilio);
+    }
+
+    public async Task ActualizarClienteAsync(int clienteId, ActualizarClienteRequest request)
+    {
+        var cliente = await _clienteRepo.GetByIdAsync(clienteId);
+        if (cliente == null) throw new KeyNotFoundException($"No se encontró el cliente {clienteId}");
+
+        if (cliente.Usuario != null)
+        {
+            cliente.Usuario.NombreCompleto = request.NombreCompleto;
+            await _usuarioRepo.UpdateAsync(cliente.Usuario);
+        }
+
+        cliente.Telefono = request.Telefono;
+        cliente.Domicilio = request.Domicilio;
+        if (request.FotoUrl != null)
+        {
+            cliente.FotoUrl = request.FotoUrl;
+        }
+
+        await _clienteRepo.UpdateAsync(cliente);
+    }
+
+    public async Task CambiarEstadoClienteAsync(int clienteId, CambiarEstadoRequest request)
+    {
+        var cliente = await _clienteRepo.GetByIdAsync(clienteId);
+        if (cliente == null) throw new KeyNotFoundException($"No se encontró el cliente {clienteId}");
+
+        if (cliente.Usuario != null)
+        {
+            cliente.Usuario.Estado = request.Activo;
+            await _usuarioRepo.UpdateAsync(cliente.Usuario);
+        }
+    }
+
+    public async Task EliminarClienteAsync(int clienteId)
+    {
+        var cliente = await _clienteRepo.GetByIdAsync(clienteId);
+        if (cliente == null) throw new KeyNotFoundException($"No se encontró el cliente {clienteId}");
+
+        await _clienteRepo.DeleteAsync(cliente);
+        
+        if (cliente.UsuarioId.HasValue)
+        {
+            var usuario = await _usuarioRepo.GetByIdAsync(cliente.UsuarioId.Value);
+            if (usuario != null)
+                await _usuarioRepo.DeleteAsync(usuario);
+        }
     }
 
     private static ClienteResponse MapCliente(Cliente.DatAccess.Entities.Usuarios.ClienteEntity c)

@@ -28,8 +28,11 @@ public class UsuariosController : ControllerBase
 
     // ── Endpoints de Clientes ────────────────────────
     [HttpGet("clientes")]
-    public async Task<IActionResult> GetAllClientes()
-        => Ok(await _service.GetAllClientesAsync());
+    public async Task<IActionResult> GetAllClientes([FromQuery] int page = 1, [FromQuery] int size = 10, [FromQuery] string? nombre = null)
+    {
+        var result = await _service.GetAllClientesAsync(page, size, nombre);
+        return Ok(result);
+    }
 
     [HttpGet("clientes/{clienteId}")]
     public async Task<IActionResult> GetClienteById(int clienteId)
@@ -53,5 +56,26 @@ public class UsuariosController : ControllerBase
     {
         await _service.RegistrarClienteAsync(request);
         return Created("", new { mensaje = "Cliente registrado exitosamente" });
+    }
+
+    [HttpPut("clientes/{id}")]
+    public async Task<IActionResult> ActualizarCliente(int id, [FromBody] ActualizarClienteRequest request)
+    {
+        await _service.ActualizarClienteAsync(id, request);
+        return Ok(new { mensaje = "Cliente actualizado exitosamente" });
+    }
+
+    [HttpPatch("clientes/{id}/estado")]
+    public async Task<IActionResult> CambiarEstadoCliente(int id, [FromBody] CambiarEstadoRequest request)
+    {
+        await _service.CambiarEstadoClienteAsync(id, request);
+        return Ok(new { mensaje = "Estado del cliente actualizado" });
+    }
+
+    [HttpDelete("clientes/{id}")]
+    public async Task<IActionResult> EliminarCliente(int id)
+    {
+        await _service.EliminarClienteAsync(id);
+        return NoContent();
     }
 }

@@ -1,18 +1,31 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Microservicio.Clientes.Business.DTOs.Usuarios;
 
 // ── Request DTOs ─────────────────────────────────────
 public record RegistrarClienteRequest(
-    string Email,
-    string Password,
-    string NombreCompleto,
-    string Cedula,
-    string Telefono,
-    string Domicilio
+    [Required] [EmailAddress] [MaxLength(200)] string Email,
+    [Required] [MinLength(8)] [MaxLength(500)] string Password,
+    [Required] [MaxLength(200)] string NombreCompleto,
+    [Required] [RegularExpression(@"^\d+$", ErrorMessage = "La cédula debe contener solo números")] [StringLength(10, MinimumLength = 10)] string Cedula,
+    [Required] [RegularExpression(@"^\d+$", ErrorMessage = "El teléfono debe contener solo números")] [MaxLength(20)] string Telefono,
+    [Required] [MaxLength(300)] string Domicilio
+);
+
+public record ActualizarClienteRequest(
+    [Required] [MaxLength(200)] string NombreCompleto,
+    [Required] [RegularExpression(@"^\d+$")] [MaxLength(20)] string Telefono,
+    [Required] [MaxLength(300)] string Domicilio,
+    string? FotoUrl
+);
+
+public record CambiarEstadoRequest(
+    [Required] bool Activo
 );
 
 public record LoginRequest(
-    string Email,
-    string Password
+    [Required] [EmailAddress] string Email,
+    [Required] string Password
 );
 
 // ── Response DTOs ────────────────────────────────────
