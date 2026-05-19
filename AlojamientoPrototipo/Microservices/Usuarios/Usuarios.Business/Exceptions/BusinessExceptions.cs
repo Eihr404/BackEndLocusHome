@@ -21,3 +21,13 @@ public class AuthException : Exception
 {
     public AuthException(string message) : base(message) { }
 }
+
+public class LocalizacionNotFoundException : Exception
+{
+    public LocalizacionNotFoundException(int id) : base($"No se encontró la localización con ID {id}") { }
+}
+
+public class BusinessRuleException : Exception
+{
+    public BusinessRuleException(string message) : base(message) { }
+}

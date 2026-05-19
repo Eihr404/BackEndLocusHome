@@ -33,6 +33,12 @@ public abstract class RepositoryBase<T> where T : class
         return entity;
     }
 
+    public virtual async Task AddRangeAsync(IEnumerable<T> entities)
+    {
+        await _dbSet.AddRangeAsync(entities);
+        await _context.SaveChangesAsync();
+    }
+
     public virtual async Task UpdateAsync(T entity)
     {
         _dbSet.Update(entity);

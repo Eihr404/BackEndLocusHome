@@ -21,8 +21,20 @@ public static class ReservasBusinessMapper
         model.CodigoReserva,
         model.FechaCreacion,
         model.DetallesHabitacion.Select(ToResponse).ToList(),
-        model.Descuento?.Codigo,
         model.Descuento?.Porcentaje
+    );
+
+    public static ReservaResumenResponse ToResumenResponse(ReservaDataModel model) => new(
+        model.ReservaId,
+        model.ClienteId,
+        model.AlojamientoId,
+        model.FechaCheckIn,
+        model.FechaCheckOut,
+        model.NumHabitaciones,
+        model.Total,
+        model.Estado,
+        model.CodigoReserva,
+        model.FechaCreacion
     );
 
     public static DetalleHabitacionResponse ToResponse(ReservaDetalleHabitacionDataModel model) => new(

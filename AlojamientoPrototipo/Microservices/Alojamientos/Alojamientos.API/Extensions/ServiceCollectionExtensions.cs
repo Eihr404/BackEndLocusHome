@@ -24,11 +24,13 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAlojamientosDataService, AlojamientosDataService>();
         services.AddScoped<IHabitacionesDataService, HabitacionesDataService>();
         services.AddScoped<IAlojamientoFotosDataService, AlojamientoFotosDataService>();
+        services.AddScoped<ICalendarioDataService, CalendarioDataService>();
 
         // ── Business ────────────────────────────────────
         services.AddScoped<IAlojamientosService, AlojamientosService>();
         services.AddScoped<IHabitacionesService, HabitacionesService>();
         services.AddScoped<IFotosService, FotosService>();
+        services.AddScoped<ICalendarioService, CalendarioService>();
 
         return services;
     }

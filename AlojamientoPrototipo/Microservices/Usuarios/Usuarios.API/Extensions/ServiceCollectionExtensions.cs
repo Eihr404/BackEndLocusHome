@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUsuariosService, UsuariosService>();
         services.AddScoped<IClientesService, ClientesService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ILocalizacionesService, LocalizacionesService>();
 
         return services;
     }

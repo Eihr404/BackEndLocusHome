@@ -11,4 +11,7 @@ public class LocalizacionEntity
 
     [MaxLength(500)]
     public string? Descripcion { get; set; }
+
+    [Column(TypeName = "geometry(Polygon)")]
+    public NetTopologySuite.Geometries.Polygon? Poligono { get; set; }
 }

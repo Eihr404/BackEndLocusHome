@@ -7,7 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ── 1. Base de datos ─────────────────────────────────
 builder.Services.AddDbContext<UsuariosDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("ConexionUsuarios"))
+    options.UseNpgsql(builder.Configuration.GetConnectionString("ConexionUsuarios"), 
+            npgsqlOptions => npgsqlOptions.UseNetTopologySuite())
            .UseLowerCaseNamingConvention());
 
 // ── 2. Dependencias de la Aplicación ─────────────────

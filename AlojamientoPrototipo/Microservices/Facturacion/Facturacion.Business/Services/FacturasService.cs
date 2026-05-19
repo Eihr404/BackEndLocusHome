@@ -36,6 +36,12 @@ public class FacturasService : IFacturasService
         return facturas.Select(FacturacionBusinessMapper.ToResponse);
     }
 
+    public async Task<IEnumerable<FacturaResumenResponse>> GetResumenByReservaIdAsync(int reservaId)
+    {
+        var facturas = await _facturasDataService.GetByReservaIdAsync(reservaId);
+        return facturas.Select(FacturacionBusinessMapper.ToResumenResponse);
+    }
+
     public async Task<FacturaResponse> CrearAsync(CrearFacturaRequest request)
     {
         // Validación de negocio adicional

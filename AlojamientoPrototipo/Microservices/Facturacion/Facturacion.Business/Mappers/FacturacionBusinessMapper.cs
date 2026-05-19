@@ -18,6 +18,18 @@ public static class FacturacionBusinessMapper
         Detalles = model.Detalles.Select(ToResponse).ToList()
     };
 
+    public static FacturaResumenResponse ToResumenResponse(FacturaDataModel model) => new()
+    {
+        FacturaId = model.FacturaId,
+        ReservaId = model.ReservaId,
+        MetodoPagoTipo = model.MetodoPago?.Tipo,
+        Monto = model.Monto,
+        Estado = model.Estado,
+        FechaPago = model.FechaPago,
+        FechaCreacion = model.FechaCreacion,
+        TotalDetalles = model.Detalles.Count
+    };
+
     public static DetalleFacturaResponse ToResponse(DetalleFacturaDataModel model) => new()
     {
         DetalleFacturaId = model.DetalleFacturaId,

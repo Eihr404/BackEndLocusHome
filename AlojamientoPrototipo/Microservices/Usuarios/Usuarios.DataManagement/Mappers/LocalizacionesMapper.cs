@@ -8,6 +8,7 @@ public static class LocalizacionesMapper
     public static LocalizacionDataModel ToDataModel(LocalizacionEntity entity) => new()
     {
         LocalizacionId = entity.LocalizacionId,
-        Descripcion = entity.Descripcion
+        Descripcion = entity.Descripcion,
+        PoligonoWkt = entity.Poligono != null ? entity.Poligono.ToText() : null
     };
 }

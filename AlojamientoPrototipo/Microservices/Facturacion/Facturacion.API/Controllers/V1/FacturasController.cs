@@ -20,6 +20,10 @@ public class FacturasController : ControllerBase
     public async Task<IActionResult> GetByReservaId(int reservaId)
         => Ok(await _service.GetByReservaIdAsync(reservaId));
 
+    [HttpGet("resumen/reserva/{reservaId}")]
+    public async Task<IActionResult> GetResumenByReservaId(int reservaId)
+        => Ok(await _service.GetResumenByReservaIdAsync(reservaId));
+
     [HttpPost]
     public async Task<IActionResult> CrearFactura([FromBody] CrearFacturaRequest request)
     {

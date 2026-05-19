@@ -29,6 +29,21 @@ public class LocalizacionesDataService : ILocalizacionesDataService
         {
             Descripcion = model.Descripcion
         };
+
+        if (!string.IsNullOrEmpty(model.PoligonoWkt))
+        {
+            var reader = new NetTopologySuite.IO.WKTReader();
+            var geometry = reader.Read(model.PoligonoWkt);
+            if (geometry is NetTopologySuite.Geometries.Polygon polygon)
+            {
+                entity.Poligono = polygon;
+            }
+            else
+            {
+                throw new ArgumentException("El WKT proporcionado no es un polígono válido.");
+            }
+        }
+
         var created = await _repo.AddAsync(entity);
         return LocalizacionesMapper.ToDataModel(created);
     }

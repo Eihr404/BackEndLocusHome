@@ -20,6 +20,10 @@ public class ReservasController : ControllerBase
     public async Task<IActionResult> GetByClienteId(int clienteId)
         => Ok(await _service.GetByClienteIdAsync(clienteId));
 
+    [HttpGet("resumen/cliente/{clienteId}")]
+    public async Task<IActionResult> GetResumenByClienteId(int clienteId)
+        => Ok(await _service.GetResumenByClienteIdAsync(clienteId));
+
     [HttpPost]
     public async Task<IActionResult> CrearReserva([FromBody] CrearReservaRequest request)
     {
