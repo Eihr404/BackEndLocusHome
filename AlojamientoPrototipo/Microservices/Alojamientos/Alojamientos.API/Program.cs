@@ -40,6 +40,7 @@ app.UseCors();
 app.MapControllers();
 
 // gRPC Service
+app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 app.MapGrpcService<Alojamientos.API.GrpcServices.CalendarioGrpcService>();
 
 app.Run();
