@@ -12,7 +12,7 @@ builder.Services.AddDbContext<ReservasDbContext>(options =>
            .UseLowerCaseNamingConvention());
 
 // ── 2. Dependencias de la Aplicación ─────────────────
-builder.Services.AddApplicationServices();
+builder.Services.AddApplicationServices(builder.Configuration);
 
 // ── Event Bus (MassTransit + RabbitMQ / CloudAMQP) ───
 builder.Services.AddMassTransit(x =>
