@@ -13,8 +13,9 @@ builder.Services.AddDbContext<AlojamientosDbContext>(options =>
 // ── 2. Dependencias de la Aplicación ─────────────────
 builder.Services.AddApplicationServices();
 
-// ── 3. Presentación (Controllers) ────────────────────
+// ── 3. Presentación (Controllers & gRPC) ───────────────
 builder.Services.AddControllers();
+builder.Services.AddGrpc();
 
 // ── 4. Infraestructura Web (Swagger & CORS) ──────────
 builder.Services.AddEndpointsApiExplorer();
@@ -37,5 +38,8 @@ app.UseCors();
 
 // Mapeo de Controladores
 app.MapControllers();
+
+// gRPC Service
+app.MapGrpcService<Alojamientos.API.GrpcServices.CalendarioGrpcService>();
 
 app.Run();

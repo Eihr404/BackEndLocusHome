@@ -12,15 +12,18 @@ public class ReservasService : IReservasService
     private readonly IReservasDataService _reservasDataService;
     private readonly IDescuentosDataService _descuentosDataService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly Shared.Protos.CalendarioGrpc.CalendarioGrpcClient _calendarioGrpcClient;
 
     public ReservasService(
         IReservasDataService reservasDataService,
         IDescuentosDataService descuentosDataService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        Shared.Protos.CalendarioGrpc.CalendarioGrpcClient calendarioGrpcClient)
     {
         _reservasDataService = reservasDataService;
         _descuentosDataService = descuentosDataService;
         _unitOfWork = unitOfWork;
+        _calendarioGrpcClient = calendarioGrpcClient;
     }
 
     public async Task<ReservaResponse> GetByIdAsync(int id)
@@ -57,7 +60,23 @@ public class ReservasService : IReservasService
                 throw new DescuentoInvalidoException(request.CodigoDescuento);
         }
 
-        // 3. Generación de detalles y subtotal
+        // 3. Verificación de Disponibilidad vía gRPC (Sincrónico y Rápido)
+        foreach (var habReq in request.Habitaciones)
+        {
+            var disponibilidad = await _calendarioGrpcClient.VerificarDisponibilidadAsync(new Shared.Protos.DisponibilidadRequest
+            {
+                HabitacionId = habReq.HabitacionId,
+                FechaInicio = request.FechaCheckIn.ToString("yyyy-MM-dd"),
+                FechaFin = request.FechaCheckOut.ToString("yyyy-MM-dd")
+            });
+
+            if (!disponibilidad.Disponible)
+            {
+                throw new BusinessRuleException($"Habitación {habReq.HabitacionId} no disponible: {disponibilidad.Mensaje}");
+            }
+        }
+
+        // 4. Generación de detalles y subtotal
         var detalles = new List<ReservaDetalleHabitacionDataModel>();
         decimal subTotal = 0;
 

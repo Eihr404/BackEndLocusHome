@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Facturacion.DataAccess.Contexts;
 using Facturacion.API.Extensions;
 using Facturacion.API.Middleware;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,31 @@ builder.Services.AddDbContext<FacturacionDbContext>(options =>
 
 // ── 2. Dependencias de la Aplicación ─────────────────
 builder.Services.AddApplicationServices();
+
+// ── Event Bus (MassTransit + RabbitMQ) ───────────────
+builder.Services.AddMassTransit(x =>
+{
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        // Se espera "amqps://user:pass@host/vhost" desde appsettings.json o variables de entorno
+        var rmqUrl = builder.Configuration.GetConnectionString("RabbitMQ");
+        if (!string.IsNullOrEmpty(rmqUrl))
+        {
+            cfg.Host(new Uri(rmqUrl));
+        }
+        else
+        {
+            // Fallback para desarrollo local si no hay nube configurada
+            cfg.Host("localhost", "/", h =>
+            {
+                h.Username("guest");
+                h.Password("guest");
+            });
+        }
+        
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 // ── 3. Presentación (Controllers) ────────────────────
 builder.Services.AddControllers();

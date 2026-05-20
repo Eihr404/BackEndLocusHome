@@ -21,6 +21,7 @@ public static class ReservasBusinessMapper
         model.CodigoReserva,
         model.FechaCreacion,
         model.DetallesHabitacion.Select(ToResponse).ToList(),
+        model.Descuento?.Codigo,
         model.Descuento?.Porcentaje
     );
 

@@ -4,6 +4,8 @@ using Facturacion.Business.Interfaces;
 using Facturacion.Business.Mappers;
 using Facturacion.DataManagement.Interfaces;
 using Facturacion.DataManagement.Models;
+using MassTransit;
+using Shared.Kernel.Events;
 
 namespace Facturacion.Business.Services;
 
@@ -12,15 +14,18 @@ public class FacturasService : IFacturasService
     private readonly IFacturasDataService _facturasDataService;
     private readonly IAuditoriaDataService _auditoriaDataService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublishEndpoint _publishEndpoint;
 
     public FacturasService(
         IFacturasDataService facturasDataService,
         IAuditoriaDataService auditoriaDataService,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint)
     {
         _facturasDataService = facturasDataService;
         _auditoriaDataService = auditoriaDataService;
         _unitOfWork = unitOfWork;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<FacturaResponse> GetByIdAsync(int id)
@@ -97,6 +102,10 @@ public class FacturasService : IFacturasService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
+            // Obtener la factura para conocer el ReservaId y Monto
+            var factura = await _facturasDataService.GetByIdAsync(id)
+                ?? throw new FacturaNotFoundException(id);
+
             await _facturasDataService.UpdateStatusAsync(id, "Pagado");
 
             await _auditoriaDataService.RegistrarAccionAsync(new AuditoriaGeneralDataModel
@@ -110,6 +119,15 @@ public class FacturasService : IFacturasService
             });
 
             await _unitOfWork.CommitTransactionAsync();
+
+            // ── Publicar evento asíncrono a RabbitMQ (CloudAMQP) ──
+            await _publishEndpoint.Publish(new FacturaPagadaEvent
+            {
+                ReservaId = factura.ReservaId,
+                FacturaId = factura.FacturaId,
+                MontoPagado = factura.Monto,
+                FechaPago = DateTime.UtcNow
+            });
         }
         catch
         {

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Reservas.DataAccess.Contexts;
 using Reservas.API.Extensions;
 using Reservas.API.Middleware;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,32 @@ builder.Services.AddDbContext<ReservasDbContext>(options =>
 
 // ── 2. Dependencias de la Aplicación ─────────────────
 builder.Services.AddApplicationServices();
+
+// ── Event Bus (MassTransit + RabbitMQ / CloudAMQP) ───
+builder.Services.AddMassTransit(x =>
+{
+    // Registrar el consumidor de FacturaPagadaEvent
+    x.AddConsumer<Reservas.API.Consumers.FacturaPagadaConsumer>();
+
+    x.UsingRabbitMq((context, cfg) =>
+    {
+        var rmqUrl = builder.Configuration.GetConnectionString("RabbitMQ");
+        if (!string.IsNullOrEmpty(rmqUrl))
+        {
+            cfg.Host(new Uri(rmqUrl));
+        }
+        else
+        {
+            cfg.Host("localhost", "/", h =>
+            {
+                h.Username("guest");
+                h.Password("guest");
+            });
+        }
+
+        cfg.ConfigureEndpoints(context);
+    });
+});
 
 // ── 3. Presentación (Controllers) ────────────────────
 builder.Services.AddControllers();

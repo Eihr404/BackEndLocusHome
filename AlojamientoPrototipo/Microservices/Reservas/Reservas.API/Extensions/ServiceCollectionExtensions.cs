@@ -25,6 +25,13 @@ public static class ServiceCollectionExtensions
         // ── Business ────────────────────────────────────
         services.AddScoped<IReservasService, ReservasService>();
 
+        // ── gRPC Clients ────────────────────────────────
+        // Idealmente la URL viene de appsettings.json, pero por prototipo hardcodeamos la de Alojamientos
+        services.AddGrpcClient<Shared.Protos.CalendarioGrpc.CalendarioGrpcClient>(o =>
+        {
+            o.Address = new Uri("http://localhost:5002");
+        });
+
         return services;
     }
 }
