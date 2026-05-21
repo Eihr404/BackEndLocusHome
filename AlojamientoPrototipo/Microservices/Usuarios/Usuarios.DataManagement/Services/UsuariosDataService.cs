@@ -36,7 +36,9 @@ public class UsuariosDataService : IUsuariosDataService
             Rol = model.Rol,
             Email = model.Email,
             PasswordHash = model.PasswordHash,
-            NombreCompleto = model.NombreCompleto
+            NombreCompleto = model.NombreCompleto,
+            Estado = model.Estado,
+            FechaCreacion = model.FechaCreacion
         };
         var created = await _repo.AddAsync(entity);
         return UsuariosMapper.ToDataModel(created);

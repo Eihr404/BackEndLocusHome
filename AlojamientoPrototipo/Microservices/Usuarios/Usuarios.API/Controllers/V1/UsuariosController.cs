@@ -22,4 +22,23 @@ public class UsuariosController : ControllerBase
         var result = await _service.GetByIdAsync(id);
         return result == null ? NotFound() : Ok(result);
     }
+
+    [HttpPost]
+    public async Task<IActionResult> Crear([FromBody] CrearUsuarioRequest request)
+    {
+        try
+        {
+            var result = await _service.CrearUsuarioAsync(request);
+
+            return CreatedAtAction(
+                nameof(GetById),
+                new { id = result.UsuarioId },
+                result
+            );
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
+    }
 }

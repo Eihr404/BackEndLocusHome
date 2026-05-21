@@ -6,4 +6,6 @@ public interface IUsuariosService
 {
     Task<IEnumerable<UsuarioResponse>> GetAllAsync();
     Task<UsuarioResponse?> GetByIdAsync(int id);
+    Task<UsuarioResponse> CrearUsuarioAsync(CrearUsuarioRequest request);
+
 }
