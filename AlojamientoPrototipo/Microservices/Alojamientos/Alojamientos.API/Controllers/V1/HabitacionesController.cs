@@ -30,7 +30,7 @@ public class HabitacionesController : ControllerBase
     {
         if (alojamientoId.HasValue && alojamientoId.Value > 0)
         {
-            request.AlojamientoId = alojamientoId.Value;
+            request = request with { AlojamientoId = alojamientoId.Value };
         }
         var result = await _service.CrearAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = result.HabitacionId }, result);
