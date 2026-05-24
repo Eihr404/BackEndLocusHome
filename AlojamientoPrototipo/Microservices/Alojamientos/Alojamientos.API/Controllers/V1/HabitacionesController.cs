@@ -12,6 +12,7 @@ public class HabitacionesController : ControllerBase
 
     public HabitacionesController(IHabitacionesService service) => _service = service;
 
+    [HttpGet("/api/v1/alojamientos/{alojamientoId}/habitaciones")]
     [HttpGet("alojamiento/{alojamientoId}")]
     public async Task<IActionResult> GetByAlojamientoId(int alojamientoId)
         => Ok(await _service.GetByAlojamientoIdAsync(alojamientoId));
@@ -23,9 +24,14 @@ public class HabitacionesController : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
+    [HttpPost("/api/v1/alojamientos/{alojamientoId}/habitaciones")]
     [HttpPost]
-    public async Task<IActionResult> Crear([FromBody] CrearHabitacionRequest request)
+    public async Task<IActionResult> Crear([FromRoute] int? alojamientoId, [FromBody] CrearHabitacionRequest request)
     {
+        if (alojamientoId.HasValue && alojamientoId.Value > 0)
+        {
+            request.AlojamientoId = alojamientoId.Value;
+        }
         var result = await _service.CrearAsync(request);
         return CreatedAtAction(nameof(GetById), new { id = result.HabitacionId }, result);
     }
