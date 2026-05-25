@@ -11,12 +11,12 @@ import {
 } from '../models/alojamiento.model';
 import { PartnerMetric } from '../models/dashboard.model';
 import { AlojamientosService } from './alojamientos.service';
-
-const DEFAULT_SOCIO_ID = 1;
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class PartnerService {
   private readonly alojamientosService = inject(AlojamientosService);
+  private readonly authService = inject(AuthService);
 
   private readonly propertiesSignal = signal<AlojamientoCard[]>([]);
   private readonly selectedPropertySignal = signal<AlojamientoCard | null>(null);
@@ -50,7 +50,17 @@ export class PartnerService {
     ];
   });
 
-  loadProperties(socioId = DEFAULT_SOCIO_ID) {
+  loadProperties(socioId = this.getCurrentSocioId()) {
+    if (!socioId) {
+      this.propertiesSignal.set([]);
+      this.selectedPropertySignal.set(null);
+      this.roomsSignal.set([]);
+      this.photosSignal.set([]);
+      this.loadingSignal.set(false);
+      this.messageSignal.set('');
+      return;
+    }
+
     this.loadingSignal.set(true);
     this.messageSignal.set('');
 
@@ -105,7 +115,12 @@ export class PartnerService {
     });
   }
 
-  createProperty(form: AlojamientoForm, socioId = DEFAULT_SOCIO_ID, onDone?: (property: AlojamientoCard) => void) {
+  createProperty(form: AlojamientoForm, socioId = this.getCurrentSocioId(), onDone?: (property: AlojamientoCard) => void) {
+    if (!socioId) {
+      this.messageSignal.set('No se pudo identificar el socio autenticado.');
+      return;
+    }
+
     this.savingSignal.set(true);
     this.messageSignal.set('');
 
@@ -127,9 +142,14 @@ export class PartnerService {
   updateProperty(
     alojamientoId: number,
     form: AlojamientoForm,
-    socioId = DEFAULT_SOCIO_ID,
+    socioId = this.getCurrentSocioId(),
     onDone?: () => void,
   ) {
+    if (!socioId) {
+      this.messageSignal.set('No se pudo identificar el socio autenticado.');
+      return;
+    }
+
     this.savingSignal.set(true);
     this.messageSignal.set('');
 
@@ -147,7 +167,12 @@ export class PartnerService {
     });
   }
 
-  deleteProperty(alojamientoId: number, socioId = DEFAULT_SOCIO_ID, onDone?: () => void) {
+  deleteProperty(alojamientoId: number, socioId = this.getCurrentSocioId(), onDone?: () => void) {
+    if (!socioId) {
+      this.messageSignal.set('No se pudo identificar el socio autenticado.');
+      return;
+    }
+
     this.savingSignal.set(true);
     this.messageSignal.set('');
 
@@ -232,7 +257,7 @@ export class PartnerService {
         this.messageSignal.set('Imagen cargada correctamente desde Cloudinary.');
         this.savingSignal.set(false);
         this.loadPhotos(form.alojamientoId);
-        this.loadProperties(this.selectedPropertySignal()?.socioId ?? DEFAULT_SOCIO_ID);
+        this.loadProperties(this.selectedPropertySignal()?.socioId ?? this.getCurrentSocioId());
         onDone?.(photo);
       },
       error: () => {
@@ -261,6 +286,11 @@ export class PartnerService {
   }
 
   getDefaultSocioId() {
-    return DEFAULT_SOCIO_ID;
+    return this.getCurrentSocioId() ?? 0;
+  }
+
+  private getCurrentSocioId() {
+    const session = this.authService.session();
+    return session?.role === 'socio' ? (session.usuarioId ?? null) : null;
   }
 }

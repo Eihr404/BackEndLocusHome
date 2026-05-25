@@ -12,6 +12,7 @@
 </section>
 
 <section class="cards" *ngIf="!loading; else loadingTpl">
+  <p *ngIf="!properties.length" class="loading">No hay alojamientos disponibles por el momento.</p>
   <article class="property-card" *ngFor="let property of properties">
     <div class="poster">
       <span>{{ property.tipoAlojamiento }}</span>

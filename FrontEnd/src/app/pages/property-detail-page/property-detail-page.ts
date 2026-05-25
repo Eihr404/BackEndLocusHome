@@ -19,14 +19,21 @@ export class PropertyDetailPageComponent {
   rooms: Habitacion[] = [];
 
   constructor() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.route.paramMap.subscribe((params) => {
+      const id = Number(params.get('id'));
+      if (!id) {
+        this.property = null;
+        this.rooms = [];
+        return;
+      }
 
-    this.alojamientosService.getById(id).subscribe((property) => {
-      this.property = property;
-    });
+      this.alojamientosService.getById(id).subscribe((property) => {
+        this.property = property;
+      });
 
-    this.alojamientosService.getRoomsByProperty(id).subscribe((rooms) => {
-      this.rooms = rooms;
+      this.alojamientosService.getRoomsByProperty(id).subscribe((rooms) => {
+        this.rooms = rooms;
+      });
     });
   }
 }

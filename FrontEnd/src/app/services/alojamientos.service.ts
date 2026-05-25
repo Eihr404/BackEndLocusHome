@@ -138,9 +138,9 @@ export class AlojamientosService {
 
   getRoomsByProperty(alojamientoId: number) {
     return this.http
-      .get<Habitacion[]>(`${ALOJAMIENTOS_API_BASE_URL}/alojamientos/${alojamientoId}/habitaciones`)
+      .get<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/alojamientos/${alojamientoId}/habitaciones`)
       .pipe(
-        map((rooms) => rooms.map((room) => this.normalizeRoom(room))),
+        map((response) => this.unwrapCollection(response).map((room) => this.normalizeRoom(room))),
         catchError(() =>
           of(MOCK_HABITACIONES.filter((room) => room.alojamientoId === alojamientoId)),
         ),
@@ -148,9 +148,9 @@ export class AlojamientosService {
   }
 
   getPartnerProperties(socioId: number) {
-    return this.http.get<unknown[]>(`${PARTNER_API_BASE_URL}/alojamientos`).pipe(
-      map((items) =>
-        items
+    return this.http.get<unknown>(`${PARTNER_API_BASE_URL}/alojamientos`).pipe(
+      map((response) =>
+        this.unwrapCollection(response)
           .map((item) => this.normalizeProperty(item))
           .filter((item) => item.socioId === socioId),
       ),
@@ -241,9 +241,9 @@ export class AlojamientosService {
 
   getPhotosByProperty(alojamientoId: number) {
     return this.http
-      .get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/alojamiento/${alojamientoId}`)
+      .get<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/alojamiento/${alojamientoId}`)
       .pipe(
-        map((photos) => photos.map((photo) => this.normalizePhoto(photo))),
+        map((response) => this.unwrapCollection(response).map((photo) => this.normalizePhoto(photo))),
         catchError(() => of<FotoAlojamiento[]>([])),
       );
   }
@@ -266,16 +266,16 @@ export class AlojamientosService {
   }
 
   getPropertyTypes() {
-    return this.http.get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos/tipos`).pipe(
-      map((items) =>
-        items.map((item: any) => ({
+    return this.http.get<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos/tipos`).pipe(
+      map((response) =>
+        this.unwrapCollection(response).map((item: any) => ({
           id: item.tipoAlojamientoId ?? item.TipoAlojamientoId ?? 0,
           nombre: item.nombre ?? item.Nombre ?? 'Tipo',
         })) satisfies TipoAlojamientoOption[],
       ),
       catchError(() =>
-        this.http.get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos`).pipe(
-          map((items) => this.extractTypesFromProperties(items)),
+        this.http.get<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos`).pipe(
+          map((response) => this.extractTypesFromProperties(this.unwrapCollection(response))),
           catchError(() =>
             of<TipoAlojamientoOption[]>([
               { id: 1, nombre: 'Hotel' },
@@ -291,11 +291,7 @@ export class AlojamientosService {
   }
 
   private unwrapList(response: ApiEnvelope<AlojamientoCard[]> | AlojamientoCard[]) {
-    if (Array.isArray(response)) {
-      return response;
-    }
-
-    return response.data ?? [];
+    return this.unwrapCollection(response);
   }
 
   private unwrapItem(response: ApiEnvelope<AlojamientoCard> | AlojamientoCard) {
@@ -304,6 +300,32 @@ export class AlojamientosService {
     }
 
     return response.data ?? null;
+  }
+
+  private unwrapCollection(response: unknown) {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    if (!response || typeof response !== 'object') {
+      return [];
+    }
+
+    const collection = response as { data?: unknown; value?: unknown; items?: unknown };
+
+    if (Array.isArray(collection.data)) {
+      return collection.data;
+    }
+
+    if (Array.isArray(collection.value)) {
+      return collection.value;
+    }
+
+    if (Array.isArray(collection.items)) {
+      return collection.items;
+    }
+
+    return [];
   }
 
   private applyLocalFilters(items: AlojamientoCard[], filters?: { city?: string; search?: string }) {

@@ -50,6 +50,10 @@
 
     <p *ngIf="message()" class="message">{{ message() }}</p>
 
+    <div *ngIf="!loading() && !properties().length" class="message">
+      Sin alojamientos disponibles.
+    </div>
+
     <div class="property-item" *ngFor="let property of properties()" [class.selected]="selectedProperty()?.alojamientoId === property.alojamientoId">
       <div class="property-main" (click)="selectProperty(property)">
         <strong>{{ property.nombre }}</strong>

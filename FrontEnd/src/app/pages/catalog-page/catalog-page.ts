@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -12,7 +12,7 @@ import { AlojamientosService } from '../../services/alojamientos.service';
   templateUrl: './catalog-page.html',
   styleUrl: './catalog-page.css',
 })
-export class CatalogPageComponent {
+export class CatalogPageComponent implements OnInit {
   private readonly alojamientosService = inject(AlojamientosService);
 
   search = '';
@@ -20,7 +20,7 @@ export class CatalogPageComponent {
   loading = true;
   properties: AlojamientoCard[] = [];
 
-  constructor() {
+  ngOnInit() {
     this.loadCatalog();
   }
 

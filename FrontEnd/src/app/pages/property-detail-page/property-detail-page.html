@@ -19,6 +19,7 @@
 
 <section class="rooms">
   <h2>Habitaciones o unidades</h2>
+  <p *ngIf="!rooms.length">No hay habitaciones registradas para este alojamiento todavia.</p>
   <article class="room-card" *ngFor="let room of rooms">
     <div>
       <strong>{{ room.nombre }}</strong>
