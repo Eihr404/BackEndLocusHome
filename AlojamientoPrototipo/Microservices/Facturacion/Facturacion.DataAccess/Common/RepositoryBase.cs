@@ -35,7 +35,16 @@ public abstract class RepositoryBase<T> where T : class
 
     public virtual async Task UpdateAsync(T entity)
     {
-        _dbSet.Update(entity);
+        var entry = _context.Entry(entity);
+
+        // Preserve property-level tracking for entities already loaded by this DbContext.
+        // This avoids rewriting unchanged DateTime values with ambiguous Kind metadata.
+        if (entry.State == EntityState.Detached)
+        {
+            _dbSet.Attach(entity);
+            entry.State = EntityState.Modified;
+        }
+
         await _context.SaveChangesAsync();
     }
 

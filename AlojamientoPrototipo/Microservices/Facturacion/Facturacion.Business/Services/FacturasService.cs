@@ -56,13 +56,15 @@ public class FacturasService : IFacturasService
             throw new MontoInvalidoException($"El monto total ({request.Monto}) no coincide con la suma de los detalles ({totalCalculado}).");
         }
 
+        var fechaPagoUtc = NormalizeToUtc(request.FechaPago);
+
         var model = new FacturaDataModel
         {
             ReservaId = request.ReservaId,
             MetodoPagoId = request.MetodoPagoId,
             Monto = request.Monto,
-            FechaPago = request.FechaPago,
-            Estado = request.FechaPago.HasValue ? "Pagado" : "Pendiente",
+            FechaPago = fechaPagoUtc,
+            Estado = fechaPagoUtc.HasValue ? "Pagado" : "Pendiente",
             Detalles = request.Detalles.Select(d => new DetalleFacturaDataModel
             {
                 Descripcion = d.Descripcion,
@@ -160,5 +162,17 @@ public class FacturasService : IFacturasService
             await _unitOfWork.RollbackTransactionAsync();
             throw;
         }
+    }
+
+    private static DateTime? NormalizeToUtc(DateTime? value)
+    {
+        if (!value.HasValue) return null;
+
+        return value.Value.Kind switch
+        {
+            DateTimeKind.Utc => value.Value,
+            DateTimeKind.Local => value.Value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)
+        };
     }
 }
