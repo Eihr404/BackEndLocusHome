@@ -10,5 +10,13 @@ public record LoginRequest(
 public record LoginResponse(
     string Token,
     string Rol,
-    string NombreCompleto
+    string NombreCompleto,
+    int UsuarioId,
+    int? ClienteId
+);
+
+public record LoginAttemptResult(
+    bool Success,
+    LoginResponse? Session = null,
+    string? FailureReason = null
 );

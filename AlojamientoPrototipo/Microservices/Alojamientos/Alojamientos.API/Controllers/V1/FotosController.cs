@@ -1,6 +1,7 @@
 using Alojamientos.Business.DTOs.Fotos;
 using Alojamientos.Business.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Alojamientos.API.Services;
 
 namespace Alojamientos.API.Controllers.V1;
 
@@ -9,8 +10,13 @@ namespace Alojamientos.API.Controllers.V1;
 public class FotosController : ControllerBase
 {
     private readonly IFotosService _service;
+    private readonly ICloudinaryUploadService _cloudinaryUploadService;
 
-    public FotosController(IFotosService service) => _service = service;
+    public FotosController(IFotosService service, ICloudinaryUploadService cloudinaryUploadService)
+    {
+        _service = service;
+        _cloudinaryUploadService = cloudinaryUploadService;
+    }
 
     [HttpGet("alojamiento/{alojamientoId}")]
     public async Task<IActionResult> GetByAlojamientoId(int alojamientoId)
@@ -20,6 +26,20 @@ public class FotosController : ControllerBase
     public async Task<IActionResult> Agregar([FromBody] AgregarFotoRequest request)
     {
         var result = await _service.AgregarAsync(request);
+        return Created("", result);
+    }
+
+    [HttpPost("cloudinary")]
+    public async Task<IActionResult> AgregarDesdeCloudinary([FromBody] SubirFotoCloudinaryRequest request, CancellationToken cancellationToken)
+    {
+        var secureUrl = await _cloudinaryUploadService.UploadImageFromUrlAsync(request.SourceUrl, cancellationToken);
+        var result = await _service.AgregarAsync(new AgregarFotoRequest(
+            request.AlojamientoId,
+            secureUrl,
+            request.Orden,
+            request.Descripcion
+        ));
+
         return Created("", result);
     }
 

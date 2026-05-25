@@ -5,6 +5,7 @@ using Alojamientos.DataManagement.Interfaces;
 using Alojamientos.DataManagement.Services;
 using Alojamientos.Business.Interfaces;
 using Alojamientos.Business.Services;
+using Alojamientos.API.Services;
 
 namespace Alojamientos.API.Extensions;
 
@@ -31,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHabitacionesService, HabitacionesService>();
         services.AddScoped<IFotosService, FotosService>();
         services.AddScoped<ICalendarioService, CalendarioService>();
+        services.AddHttpClient<ICloudinaryUploadService, CloudinaryUploadService>();
 
         return services;
     }

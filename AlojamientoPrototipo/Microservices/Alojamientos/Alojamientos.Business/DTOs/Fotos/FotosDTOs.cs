@@ -9,6 +9,13 @@ public record AgregarFotoRequest(
     [MaxLength(200)] string? Descripcion = null
 );
 
+public record SubirFotoCloudinaryRequest(
+    [Required] int AlojamientoId,
+    [Required] [Url] [MaxLength(500)] string SourceUrl,
+    int Orden = 0,
+    [MaxLength(200)] string? Descripcion = null
+);
+
 public record FotoResponse(
     int FotoId,
     int AlojamientoId,
