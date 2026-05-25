@@ -1,5 +1,6 @@
 .properties-layout,
-.rooms-layout {
+.rooms-layout,
+.photos-layout {
   display: grid;
   grid-template-columns: 0.95fr 1.05fr;
   gap: 1rem;
@@ -105,7 +106,8 @@ button.danger {
 
 .list-head,
 .property-item,
-.room-item {
+.room-item,
+.photo-item {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -133,7 +135,8 @@ button.danger {
 }
 
 .property-item,
-.room-item {
+.room-item,
+.photo-item {
   align-items: center;
   padding: 1rem 0;
   border-bottom: 1px solid rgba(18, 34, 54, 0.08);
@@ -157,13 +160,36 @@ button.danger {
 }
 
 .property-item p,
-.room-item p {
+.room-item p,
+.photo-item p {
   margin: 0.3rem 0 0;
+}
+
+.photo-item {
+  align-items: flex-start;
+}
+
+.photo-item img {
+  width: 9rem;
+  height: 6.5rem;
+  object-fit: cover;
+  border-radius: 1rem;
+  background: #dfe9f5;
+}
+
+.photo-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.photo-content p {
+  word-break: break-word;
 }
 
 @media (max-width: 960px) {
   .properties-layout,
   .rooms-layout,
+  .photos-layout,
   .check-grid,
   .grid-two {
     grid-template-columns: 1fr;

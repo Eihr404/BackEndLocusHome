@@ -1,15 +1,37 @@
 <section class="register-shell">
   <article class="register-card">
     <p class="eyebrow">Registro cliente</p>
-    <h1>Crea tu perfil para reservar</h1>
+    <h1>Crea tu cuenta en la plataforma</h1>
 
     <form (ngSubmit)="submit()">
+      <select [(ngModel)]="form.rol" name="rol">
+        <option value="cliente">Cliente</option>
+        <option value="socio">Socio</option>
+      </select>
       <input [(ngModel)]="form.nombreCompleto" name="nombreCompleto" placeholder="Nombre completo" required />
       <input [(ngModel)]="form.email" name="email" type="email" placeholder="Correo" required />
       <input [(ngModel)]="form.password" name="password" type="password" placeholder="Contrasena" required />
-      <input [(ngModel)]="form.cedula" name="cedula" placeholder="Cedula" required />
-      <input [(ngModel)]="form.telefono" name="telefono" placeholder="Telefono" required />
-      <input [(ngModel)]="form.domicilio" name="domicilio" placeholder="Domicilio" required />
+      <input
+        *ngIf="form.rol === 'cliente'"
+        [(ngModel)]="form.cedula"
+        name="cedula"
+        placeholder="Cedula"
+        required
+      />
+      <input
+        *ngIf="form.rol === 'cliente'"
+        [(ngModel)]="form.telefono"
+        name="telefono"
+        placeholder="Telefono"
+        required
+      />
+      <input
+        *ngIf="form.rol === 'cliente'"
+        [(ngModel)]="form.domicilio"
+        name="domicilio"
+        placeholder="Domicilio"
+        required
+      />
       <button type="submit">Registrar</button>
     </form>
 

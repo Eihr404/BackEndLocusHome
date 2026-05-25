@@ -57,7 +57,7 @@
       </div>
       <div class="property-actions">
         <button type="button" class="secondary" (click)="editProperty(property)">Editar</button>
-        <button type="button" class="secondary" (click)="selectProperty(property)">Habitaciones</button>
+        <button type="button" class="secondary" (click)="selectProperty(property)">Gestionar</button>
         <button type="button" class="danger" (click)="deleteProperty(property)">Eliminar</button>
       </div>
     </div>
@@ -113,6 +113,59 @@
       <div class="property-actions">
         <button type="button" class="secondary" (click)="editRoom(room)">Editar</button>
         <button type="button" class="danger" (click)="deleteRoom(room)">Eliminar</button>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section *ngIf="selectedProperty() as property" class="photos-layout">
+  <article class="form-card">
+    <p class="eyebrow">Galeria del alojamiento</p>
+    <h2>Nueva imagen para {{ property.nombre }}</h2>
+    <p class="helper">
+      Pega una URL publica y la API la subira a Cloudinary antes de guardarla en la base.
+    </p>
+
+    <form (ngSubmit)="submitPhoto()">
+      <input
+        [(ngModel)]="photoForm.sourceUrl"
+        name="sourceUrl"
+        type="url"
+        placeholder="https://ejemplo.com/imagen-del-alojamiento.jpg"
+        required
+      />
+
+      <div class="grid-two">
+        <input [(ngModel)]="photoForm.orden" name="orden" type="number" min="0" placeholder="Orden" />
+        <input [(ngModel)]="photoForm.descripcion" name="descripcion" placeholder="Descripcion corta" />
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" [disabled]="saving()">Cargar imagen</button>
+      </div>
+    </form>
+  </article>
+
+  <article class="list-card">
+    <div class="list-head">
+      <div>
+        <h2>Imagenes registradas</h2>
+        <p>{{ photos().length }} imagenes para {{ property.nombre }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="!photos().length" class="message">
+      Todavia no hay imagenes para este alojamiento.
+    </div>
+
+    <div class="photo-item" *ngFor="let photo of photos()">
+      <img [src]="photo.url" [alt]="photo.descripcion || property.nombre" />
+      <div class="photo-content">
+        <strong>{{ photo.descripcion || 'Imagen del alojamiento' }}</strong>
+        <p>Orden {{ photo.orden }} · {{ photo.url }}</p>
+      </div>
+      <div class="property-actions">
+        <button type="button" class="danger" (click)="deletePhoto(photo)">Eliminar</button>
       </div>
     </div>
   </article>

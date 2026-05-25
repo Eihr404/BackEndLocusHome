@@ -2,7 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { AlojamientoCard, AlojamientoForm, Habitacion, HabitacionForm } from '../../models/alojamiento.model';
+import {
+  AlojamientoCard,
+  AlojamientoForm,
+  FotoAlojamiento,
+  FotoAlojamientoForm,
+  Habitacion,
+  HabitacionForm,
+} from '../../models/alojamiento.model';
 import { PartnerService } from '../../services/partner.service';
 
 @Component({
@@ -17,6 +24,7 @@ export class PartnerPropertiesPageComponent {
   readonly properties = this.partnerService.properties;
   readonly selectedProperty = this.partnerService.selectedProperty;
   readonly rooms = this.partnerService.rooms;
+  readonly photos = this.partnerService.photos;
   readonly saving = this.partnerService.saving;
   readonly loading = this.partnerService.loading;
   readonly message = this.partnerService.message;
@@ -27,6 +35,7 @@ export class PartnerPropertiesPageComponent {
 
   propertyForm: AlojamientoForm = this.createEmptyPropertyForm();
   roomForm: HabitacionForm = this.createEmptyRoomForm();
+  photoForm: FotoAlojamientoForm = this.createEmptyPhotoForm();
 
   constructor() {
     this.partnerService.loadPropertyTypes();
@@ -86,6 +95,10 @@ export class PartnerPropertiesPageComponent {
     this.cancelRoomEdit();
     this.roomForm = {
       ...this.createEmptyRoomForm(),
+      alojamientoId: property.alojamientoId,
+    };
+    this.photoForm = {
+      ...this.createEmptyPhotoForm(),
       alojamientoId: property.alojamientoId,
     };
   }
@@ -148,6 +161,35 @@ export class PartnerPropertiesPageComponent {
     });
   }
 
+  submitPhoto() {
+    const property = this.selectedProperty();
+    if (!property) {
+      return;
+    }
+
+    this.partnerService.uploadPhoto(
+      {
+        ...this.photoForm,
+        alojamientoId: property.alojamientoId,
+      },
+      () => {
+        this.photoForm = {
+          ...this.createEmptyPhotoForm(),
+          alojamientoId: property.alojamientoId,
+        };
+      },
+    );
+  }
+
+  deletePhoto(photo: FotoAlojamiento) {
+    const confirmed = window.confirm('Eliminar esta imagen del alojamiento?');
+    if (!confirmed) {
+      return;
+    }
+
+    this.partnerService.deletePhoto(photo.fotoId, photo.alojamientoId);
+  }
+
   private createEmptyPropertyForm(): AlojamientoForm {
     return {
       socioId: this.partnerService.getDefaultSocioId(),
@@ -176,6 +218,15 @@ export class PartnerPropertiesPageComponent {
       tieneAireAcondicionado: false,
       superficieM2: null,
       precioNoche: 0,
+    };
+  }
+
+  private createEmptyPhotoForm(): FotoAlojamientoForm {
+    return {
+      alojamientoId: this.selectedProperty()?.alojamientoId ?? 0,
+      sourceUrl: '',
+      orden: 0,
+      descripcion: '',
     };
   }
 }

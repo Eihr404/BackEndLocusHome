@@ -5,6 +5,8 @@ import { catchError, map, of } from 'rxjs';
 import {
   AlojamientoCard,
   AlojamientoForm,
+  FotoAlojamiento,
+  FotoAlojamientoForm,
   Habitacion,
   HabitacionForm,
   TipoAlojamientoOption,
@@ -237,8 +239,34 @@ export class AlojamientosService {
     return this.http.delete<void>(`${PARTNER_API_BASE_URL}/habitaciones/${habitacionId}`);
   }
 
+  getPhotosByProperty(alojamientoId: number) {
+    return this.http
+      .get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/alojamiento/${alojamientoId}`)
+      .pipe(
+        map((photos) => photos.map((photo) => this.normalizePhoto(photo))),
+        catchError(() => of<FotoAlojamiento[]>([])),
+      );
+  }
+
+  uploadPhotoViaCloudinary(form: FotoAlojamientoForm) {
+    const payload = {
+      alojamientoId: form.alojamientoId,
+      sourceUrl: form.sourceUrl,
+      orden: form.orden,
+      descripcion: form.descripcion || null,
+    };
+
+    return this.http
+      .post<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/cloudinary`, payload)
+      .pipe(map((photo) => this.normalizePhoto(photo)));
+  }
+
+  deletePhoto(fotoId: number) {
+    return this.http.delete<void>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/${fotoId}`);
+  }
+
   getPropertyTypes() {
-    return this.http.get<unknown[]>(`${PARTNER_API_BASE_URL}/alojamientos/tipos`).pipe(
+    return this.http.get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos/tipos`).pipe(
       map((items) =>
         items.map((item: any) => ({
           id: item.tipoAlojamientoId ?? item.TipoAlojamientoId ?? 0,
@@ -246,7 +274,7 @@ export class AlojamientosService {
         })) satisfies TipoAlojamientoOption[],
       ),
       catchError(() =>
-        this.http.get<unknown[]>(`${PARTNER_API_BASE_URL}/alojamientos`).pipe(
+        this.http.get<unknown[]>(`${ALOJAMIENTOS_API_BASE_URL}/Alojamientos`).pipe(
           map((items) => this.extractTypesFromProperties(items)),
           catchError(() =>
             of<TipoAlojamientoOption[]>([
@@ -337,6 +365,16 @@ export class AlojamientosService {
       superficieM2: room.superficieM2 ?? room.SuperficieM2 ?? null,
       precioNoche: Number(room.precioNoche ?? room.PrecioNoche ?? room.precioPorNoche ?? 0) || 0,
       estado: room.estado ?? room.Estado ?? 'Disponible',
+    };
+  }
+
+  private normalizePhoto(photo: any): FotoAlojamiento {
+    return {
+      fotoId: photo.fotoId ?? photo.FotoId ?? 0,
+      alojamientoId: photo.alojamientoId ?? photo.AlojamientoId ?? 0,
+      url: photo.url ?? photo.Url ?? '',
+      orden: Number(photo.orden ?? photo.Orden ?? 0) || 0,
+      descripcion: photo.descripcion ?? photo.Descripcion ?? null,
     };
   }
 

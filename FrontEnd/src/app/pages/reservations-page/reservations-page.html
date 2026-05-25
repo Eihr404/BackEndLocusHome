@@ -1,8 +1,17 @@
 <section class="reservations-shell">
   <div class="header">
-    <p class="eyebrow">Area cliente protegida por guard</p>
+    <p class="eyebrow">Historial del cliente autenticado</p>
     <h1>Mis reservas</h1>
   </div>
+
+  <p *ngIf="loading">Cargando reservas...</p>
+
+  <article *ngIf="!loading && !reservations.length" class="reservation-card empty-state">
+    <div>
+      <strong>No hay reservas todavia</strong>
+      <p>Cuando hagas una reserva desde el marketplace, aparecera aqui aunque hayas iniciado sesion como socio.</p>
+    </div>
+  </article>
 
   <article class="reservation-card" *ngFor="let reservation of reservations">
     <div>

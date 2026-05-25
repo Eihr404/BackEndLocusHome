@@ -34,6 +34,14 @@ export interface Habitacion {
   estado?: string;
 }
 
+export interface FotoAlojamiento {
+  fotoId: number;
+  alojamientoId: number;
+  url: string;
+  orden: number;
+  descripcion?: string | null;
+}
+
 export interface AlojamientoForm {
   socioId: number;
   tipoAlojamientoId: number;
@@ -59,6 +67,13 @@ export interface HabitacionForm {
   tieneAireAcondicionado: boolean;
   superficieM2?: number | null;
   precioNoche: number;
+}
+
+export interface FotoAlojamientoForm {
+  alojamientoId: number;
+  sourceUrl: string;
+  orden: number;
+  descripcion: string;
 }
 
 export interface TipoAlojamientoOption {

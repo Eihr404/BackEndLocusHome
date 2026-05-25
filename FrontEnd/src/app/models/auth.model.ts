@@ -7,10 +7,12 @@ export interface LoginRequest {
 
 export interface SessionUser {
   token: string;
+  usuarioId?: number;
   role: UserRole;
   nombreCompleto: string;
   email: string;
   demoMode: boolean;
+  clienteId?: number | null;
 }
 
 export interface RegisterRequest {
@@ -20,4 +22,5 @@ export interface RegisterRequest {
   cedula: string;
   telefono: string;
   domicilio: string;
+  rol?: UserRole;
 }

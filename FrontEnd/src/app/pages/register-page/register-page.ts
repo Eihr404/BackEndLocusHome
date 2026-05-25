@@ -20,13 +20,17 @@ export class RegisterPageComponent {
     cedula: '',
     telefono: '',
     domicilio: '',
+    rol: 'cliente' as 'cliente' | 'socio',
   };
 
   feedback = '';
 
   submit() {
     this.authService.register(this.form).subscribe(() => {
-      this.feedback = 'Cuenta preparada. Si el backend no responde, se conserva como simulacion demo.';
+      this.feedback =
+        this.form.rol === 'socio'
+          ? 'Cuenta de socio preparada en Usuarios. Si el backend no responde, se conserva como simulacion demo.'
+          : 'Cuenta de cliente preparada en Clientes y Usuarios. Si el backend no responde, se conserva como simulacion demo.';
     });
   }
 }

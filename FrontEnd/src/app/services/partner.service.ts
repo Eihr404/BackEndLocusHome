@@ -3,6 +3,8 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   AlojamientoCard,
   AlojamientoForm,
+  FotoAlojamiento,
+  FotoAlojamientoForm,
   Habitacion,
   HabitacionForm,
   TipoAlojamientoOption,
@@ -19,6 +21,7 @@ export class PartnerService {
   private readonly propertiesSignal = signal<AlojamientoCard[]>([]);
   private readonly selectedPropertySignal = signal<AlojamientoCard | null>(null);
   private readonly roomsSignal = signal<Habitacion[]>([]);
+  private readonly photosSignal = signal<FotoAlojamiento[]>([]);
   private readonly tipoOptionsSignal = signal<TipoAlojamientoOption[]>([]);
   private readonly loadingSignal = signal(false);
   private readonly savingSignal = signal(false);
@@ -27,6 +30,7 @@ export class PartnerService {
   readonly properties = computed(() => this.propertiesSignal());
   readonly selectedProperty = computed(() => this.selectedPropertySignal());
   readonly rooms = computed(() => this.roomsSignal());
+  readonly photos = computed(() => this.photosSignal());
   readonly loading = computed(() => this.loadingSignal());
   readonly saving = computed(() => this.savingSignal());
   readonly message = computed(() => this.messageSignal());
@@ -59,6 +63,7 @@ export class PartnerService {
           this.selectedPropertySignal.set(refreshed);
           if (refreshed) {
             this.loadRooms(refreshed.alojamientoId);
+            this.loadPhotos(refreshed.alojamientoId);
           }
         }
         this.loadingSignal.set(false);
@@ -80,15 +85,23 @@ export class PartnerService {
     this.selectedPropertySignal.set(property);
     if (!property) {
       this.roomsSignal.set([]);
+      this.photosSignal.set([]);
       return;
     }
 
     this.loadRooms(property.alojamientoId);
+    this.loadPhotos(property.alojamientoId);
   }
 
   loadRooms(alojamientoId: number) {
     this.alojamientosService.getRoomsByProperty(alojamientoId).subscribe((rooms) => {
       this.roomsSignal.set(rooms);
+    });
+  }
+
+  loadPhotos(alojamientoId: number) {
+    this.alojamientosService.getPhotosByProperty(alojamientoId).subscribe((photos) => {
+      this.photosSignal.set(photos.sort((left, right) => left.orden - right.orden));
     });
   }
 
@@ -206,6 +219,43 @@ export class PartnerService {
       error: () => {
         this.savingSignal.set(false);
         this.messageSignal.set('No se pudo eliminar la habitacion.');
+      },
+    });
+  }
+
+  uploadPhoto(form: FotoAlojamientoForm, onDone?: (photo: FotoAlojamiento) => void) {
+    this.savingSignal.set(true);
+    this.messageSignal.set('');
+
+    this.alojamientosService.uploadPhotoViaCloudinary(form).subscribe({
+      next: (photo) => {
+        this.messageSignal.set('Imagen cargada correctamente desde Cloudinary.');
+        this.savingSignal.set(false);
+        this.loadPhotos(form.alojamientoId);
+        this.loadProperties(this.selectedPropertySignal()?.socioId ?? DEFAULT_SOCIO_ID);
+        onDone?.(photo);
+      },
+      error: () => {
+        this.savingSignal.set(false);
+        this.messageSignal.set('No se pudo cargar la imagen con Cloudinary.');
+      },
+    });
+  }
+
+  deletePhoto(fotoId: number, alojamientoId: number, onDone?: () => void) {
+    this.savingSignal.set(true);
+    this.messageSignal.set('');
+
+    this.alojamientosService.deletePhoto(fotoId).subscribe({
+      next: () => {
+        this.messageSignal.set('Imagen eliminada correctamente.');
+        this.savingSignal.set(false);
+        this.loadPhotos(alojamientoId);
+        onDone?.();
+      },
+      error: () => {
+        this.savingSignal.set(false);
+        this.messageSignal.set('No se pudo eliminar la imagen.');
       },
     });
   }

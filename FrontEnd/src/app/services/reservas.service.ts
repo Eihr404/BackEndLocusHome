@@ -34,10 +34,14 @@ const MOCK_RESERVAS: ReservaResumen[] = [
 export class ReservasService {
   private readonly http = inject(HttpClient);
 
-  getByCliente(clienteId: number) {
+  getByCliente(clienteId: number | null | undefined, options?: { demoMode?: boolean }) {
+    if (!clienteId) {
+      return of<ReservaResumen[]>([]);
+    }
+
     return this.http
       .get<ReservaResumen[]>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/cliente/${clienteId}`)
-      .pipe(catchError(() => of(MOCK_RESERVAS)));
+      .pipe(catchError(() => of(options?.demoMode && clienteId === 1 ? MOCK_RESERVAS : [])));
   }
 
   getPartnerReservations() {

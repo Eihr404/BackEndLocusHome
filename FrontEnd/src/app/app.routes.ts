@@ -26,8 +26,7 @@ export const routes: Routes = [
       {
         path: 'mis-reservas',
         component: ReservationsPageComponent,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: ['cliente'] },
+        canActivate: [authGuard],
       },
     ],
   },

@@ -1,13 +1,22 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, map, of, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 
 import { ApiEnvelope } from '../models/api-response.model';
 import { LoginRequest, RegisterRequest, SessionUser, UserRole } from '../models/auth.model';
 import { USUARIOS_API_BASE_URL } from './api.config';
 
 const SESSION_KEY = 'alojamiento.session';
+const CLIENT_PROFILES_KEY = 'alojamiento.client-profiles';
+type StoredClientProfile = { clienteId: number; nombreCompleto: string; email: string };
+type LoginPayload = {
+  token?: string;
+  rol?: string;
+  nombreCompleto?: string;
+  usuarioId?: number;
+  clienteId?: number | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -19,9 +28,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.sessionSignal());
   readonly role = computed(() => this.sessionSignal()?.role ?? null);
 
-  login(payload: LoginRequest, preferredRole: UserRole) {
-    type LoginPayload = { token?: string; rol?: string; nombreCompleto?: string };
-
+  login(payload: LoginRequest): Observable<SessionUser> {
     return this.http
       .post<ApiEnvelope<LoginPayload> | LoginPayload>(`${USUARIOS_API_BASE_URL}/Auth/login`, payload)
       .pipe(
@@ -29,51 +36,55 @@ export class AuthService {
           const envelope = response as ApiEnvelope<LoginPayload>;
           return envelope.data ?? (response as LoginPayload);
         }),
-        tap((response) => {
-          if (response?.token) {
-            this.persistSession({
-              token: response.token,
-              role: this.normalizeRole(response.rol, preferredRole),
-              nombreCompleto: response.nombreCompleto ?? payload.email,
-              email: payload.email,
-              demoMode: false,
-            });
-          } else {
-            throw new Error('Login sin token');
+        map((response) => {
+          if (!response?.token || !response.rol) {
+            throw new Error('Respuesta de login incompleta.');
           }
-        }),
-        catchError(() => {
-          const demoUsers: Record<UserRole, SessionUser> = {
-            cliente: {
-              token: 'demo-cliente-token',
-              role: 'cliente',
-              nombreCompleto: 'Camila Vela',
-              email: payload.email,
-              demoMode: true,
-            },
-            socio: {
-              token: 'demo-socio-token',
-              role: 'socio',
-              nombreCompleto: 'Daniel Paredes',
-              email: payload.email,
-              demoMode: true,
-            },
+
+          const session: SessionUser = {
+            token: response.token,
+            usuarioId: response.usuarioId,
+            role: this.normalizeRole(response.rol),
+            nombreCompleto: response.nombreCompleto ?? payload.email,
+            email: payload.email.trim().toLowerCase(),
+            demoMode: false,
+            clienteId: this.resolveClienteId(
+              payload.email,
+              response.clienteId,
+              response.nombreCompleto ?? payload.email,
+            ),
           };
 
-          this.persistSession(demoUsers[preferredRole]);
-          return of(demoUsers[preferredRole]);
+          return session;
         }),
+        tap((session) => this.persistSession(session)),
       );
   }
 
   register(payload: RegisterRequest) {
-    return this.http.post(`${USUARIOS_API_BASE_URL}/Clientes/registrar`, payload).pipe(
-      catchError(() =>
-        of({
-          mensaje: 'Registro simulado en modo demo',
+    if (payload.rol === 'socio') {
+      return this.http.post(`${USUARIOS_API_BASE_URL}/Usuarios`, {
+        email: payload.email,
+        password: payload.password,
+        nombreCompleto: payload.nombreCompleto,
+        rol: 'Socio',
+      });
+    }
+
+    return this.http
+      .post(`${USUARIOS_API_BASE_URL}/Clientes/registrar`, {
+        email: payload.email,
+        password: payload.password,
+        nombreCompleto: payload.nombreCompleto,
+        cedula: payload.cedula,
+        telefono: payload.telefono,
+        domicilio: payload.domicilio,
+      })
+      .pipe(
+        tap(() => {
+          this.upsertClientProfile(payload.email, payload.nombreCompleto);
         }),
-      ),
-    );
+      );
   }
 
   logout() {
@@ -101,12 +112,51 @@ export class AuthService {
     }
   }
 
-  private normalizeRole(role: string | undefined, fallback: UserRole): UserRole {
-    const normalized = role?.toLowerCase();
-    if (normalized === 'cliente' || normalized === 'socio') {
-      return normalized;
+  private normalizeRole(role: string): UserRole {
+    return role.trim().toLowerCase() === 'socio' ? 'socio' : 'cliente';
+  }
+
+  private resolveClienteId(email: string, apiClienteId: number | null | undefined, nombreCompleto: string) {
+    if (apiClienteId && apiClienteId > 0) {
+      this.upsertClientProfile(email, nombreCompleto, apiClienteId);
+      return apiClienteId;
     }
 
-    return fallback;
+    const existing = this.readClientProfiles().find((item) => item.email.toLowerCase() === email.toLowerCase());
+    return existing?.clienteId ?? null;
+  }
+
+  private upsertClientProfile(email: string, nombreCompleto: string, forcedClienteId?: number) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const profiles = this.readClientProfiles();
+    const index = profiles.findIndex((item) => item.email.toLowerCase() === normalizedEmail);
+
+    if (index >= 0) {
+      const current = profiles[index];
+      const clienteId = forcedClienteId ?? current.clienteId;
+      profiles[index] = { clienteId, nombreCompleto, email: normalizedEmail };
+      localStorage.setItem(CLIENT_PROFILES_KEY, JSON.stringify(profiles));
+      return clienteId;
+    }
+
+    const nextId = forcedClienteId ?? Math.max(0, ...profiles.map((item) => item.clienteId)) + 1;
+    profiles.push({ clienteId: nextId, nombreCompleto, email: normalizedEmail });
+    localStorage.setItem(CLIENT_PROFILES_KEY, JSON.stringify(profiles));
+    return nextId;
+  }
+
+  private readClientProfiles(): StoredClientProfile[] {
+    const raw = localStorage.getItem(CLIENT_PROFILES_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as StoredClientProfile[];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      localStorage.removeItem(CLIENT_PROFILES_KEY);
+      return [];
+    }
   }
 }

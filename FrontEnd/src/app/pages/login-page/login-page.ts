@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
-import { UserRole } from '../../models/auth.model';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -16,14 +16,28 @@ export class LoginPageComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
-  email = 'demo@locushome.com';
-  password = 'Demo1234';
-  role: UserRole = 'cliente';
-  info = 'Puedes entrar en modo demo para cliente o socio aunque el backend de auth siga en stub.';
+  email = '';
+  password = '';
+  info = 'Accede con un usuario real registrado en la API.';
+  error = '';
+  loading = false;
 
   submit() {
-    this.authService.login({ email: this.email, password: this.password }, this.role).subscribe(() => {
-      void this.router.navigateByUrl(this.role === 'socio' ? '/socio' : '/explorar');
+    this.loading = true;
+    this.error = '';
+
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
+      next: (session) => {
+        this.loading = false;
+        void this.router.navigateByUrl(session.role === 'socio' ? '/socio' : '/explorar');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loading = false;
+        this.error =
+          error.status === 401
+            ? 'Correo o contrasena incorrectos.'
+            : 'No fue posible iniciar sesion con la API de usuarios.';
+      },
     });
   }
 }
