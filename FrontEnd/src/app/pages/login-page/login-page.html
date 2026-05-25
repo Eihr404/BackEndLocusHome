@@ -1,0 +1,31 @@
+<section class="auth-shell">
+  <article class="auth-card">
+    <p class="eyebrow">Acceso unificado</p>
+    <h1>Inicia sesion</h1>
+    <p>{{ info }}</p>
+
+    <form (ngSubmit)="submit()">
+      <label>
+        Correo
+        <input [(ngModel)]="email" name="email" type="email" required />
+      </label>
+
+      <label>
+        Contrasena
+        <input [(ngModel)]="password" name="password" type="password" required />
+      </label>
+
+      <label>
+        Tipo de interfaz
+        <select [(ngModel)]="role" name="role">
+          <option value="cliente">Cliente</option>
+          <option value="socio">Socio</option>
+        </select>
+      </label>
+
+      <button type="submit">Entrar</button>
+    </form>
+
+    <a routerLink="/registro">Crear cuenta de cliente</a>
+  </article>
+</section>

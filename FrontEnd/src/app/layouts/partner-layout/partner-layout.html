@@ -1,0 +1,28 @@
+<div class="dashboard-shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/socio">
+      <span>LH</span>
+      <div>
+        <strong>Panel Socio</strong>
+        <small>Gestion de inventario y reservas</small>
+      </div>
+    </a>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/socio" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Resumen</a>
+      <a routerLink="/socio/propiedades" routerLinkActive="active">Propiedades</a>
+      <a routerLink="/socio/reservas" routerLinkActive="active">Reservas</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Volver al marketplace</a>
+    </nav>
+
+    <div class="profile" *ngIf="session() as user">
+      <strong>{{ user.nombreCompleto }}</strong>
+      <small>{{ user.email }}</small>
+      <button type="button" (click)="logout()">Cerrar sesion</button>
+    </div>
+  </aside>
+
+  <main class="panel-content">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,28 @@
+.reservations-card {
+  padding: 1.5rem;
+  border-radius: 1.7rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #517092;
+  font-size: 0.75rem;
+}
+
+.reservation-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(18, 34, 54, 0.08);
+}
+
+.reservation-row p {
+  margin: 0.25rem 0 0;
+}
+
+.status-block {
+  text-align: right;
+}

@@ -1,0 +1,88 @@
+Usando la configuración de inicio de AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.API\Properties\launchSettings.json...
+Compilando...
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: Se han encontrado conflictos entre distintas versiones de "Microsoft.EntityFrameworkCore.Relational" que no se han podido resolver. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: Existía un conflicto entre "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" y "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Se eligió "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" porque era principal y "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" no lo era. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Referencias que dependen de "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" [C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll]. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Atributos Include de elementos de archivo del proyecto que provocaron la referencia "C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Referencias que dependen o se han unificado para "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" []. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Atributos Include de elementos de archivo del proyecto que provocaron la referencia "C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\Alojamientos.DataManagement.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: Se han encontrado conflictos entre distintas versiones de "Microsoft.EntityFrameworkCore.Relational" que no se han podido resolver. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: Existía un conflicto entre "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" y "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Se eligió "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" porque era principal y "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" no lo era. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Referencias que dependen de "Microsoft.EntityFrameworkCore.Relational, Version=8.0.2.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" [C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll]. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Atributos Include de elementos de archivo del proyecto que provocaron la referencia "C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\israe\.nuget\packages\microsoft.entityframeworkcore.relational\8.0.2\lib\net8.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     Referencias que dependen o se han unificado para "Microsoft.EntityFrameworkCore.Relational, Version=8.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" []. [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Atributos Include de elementos de archivo del proyecto que provocaron la referencia "C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll". [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataAccess\bin\Debug\net8.0\Alojamientos.DataAccess.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+C:\Program Files\dotnet\sdk\10.0.102\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.DataManagement\bin\Debug\net8.0\Alojamientos.DataManagement.dll [C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.Business\Alojamientos.Business.csproj]
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5002
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\Users\israe\source\repos\AlojamientoMicroserviciosIsrael\AlojamientoPrototipo\Microservices\Alojamientos\Alojamientos.API
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (197ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT t.tipoalojamientoid, t.descripcion, t.nombre
+      FROM tiposalojamiento AS t
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (183ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (167ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (173ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT t.tipoalojamientoid, t.descripcion, t.nombre
+      FROM tiposalojamiento AS t
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (183ms) [Parameters=[@p0='?', @p1='?', @p2='?', @p3='?', @p4='?' (DbType = Int32), @p5='?' (DbType = DateTime), @p6='?' (DbType = DateTime), @p7='?', @p8='?' (DbType = Int32), @p9='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO alojamientos (ciudad, descripcion, direccion, estado, estrellas, fechacreacion, fechamodificacion, nombre, socioid, tipoalojamientoid)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)
+      RETURNING alojamientoid, admitemascotas, calificacionpromedio, tieneparqueadero, tienepiscina, totalresenas;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (160ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (171ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+      WHERE a.alojamientoid = @__p_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (172ms) [Parameters=[@p0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+      DELETE FROM alojamientos
+      WHERE alojamientoid = @p0;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (166ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (160ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (159ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT a.alojamientoid, a.admitemascotas, a.calificacionpromedio, a.ciudad, a.descripcion, a.direccion, a.estado, a.estrellas, a.fechacreacion, a.fechamodificacion, a.nombre, a.socioid, a.tieneparqueadero, a.tienepiscina, a.tipoalojamientoid, a.totalresenas
+      FROM alojamientos AS a
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (163ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT t.tipoalojamientoid, t.descripcion, t.nombre
+      FROM tiposalojamiento AS t
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (168ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT t.tipoalojamientoid, t.descripcion, t.nombre
+      FROM tiposalojamiento AS t

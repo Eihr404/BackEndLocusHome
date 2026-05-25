@@ -23,6 +23,10 @@ public class AlojamientosController : ControllerBase
         return result == null ? NotFound() : Ok(result);
     }
 
+    [HttpGet("tipos")]
+    public async Task<IActionResult> GetTipos()
+        => Ok(await _service.GetTiposAsync());
+
     [HttpPost]
     public async Task<IActionResult> Crear([FromBody] CrearAlojamientoRequest request)
     {

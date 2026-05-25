@@ -1,0 +1,38 @@
+<section class="toolbar">
+  <div>
+    <p class="eyebrow">Marketplace cliente</p>
+    <h1>Explora alojamientos disponibles</h1>
+  </div>
+
+  <form class="filters" (ngSubmit)="loadCatalog()">
+    <input [(ngModel)]="search" name="search" placeholder="Nombre o concepto" />
+    <input [(ngModel)]="city" name="city" placeholder="Ciudad destino" />
+    <button type="submit">Buscar</button>
+  </form>
+</section>
+
+<section class="cards" *ngIf="!loading; else loadingTpl">
+  <article class="property-card" *ngFor="let property of properties">
+    <div class="poster">
+      <span>{{ property.tipoAlojamiento }}</span>
+      <strong>{{ property.ciudad }}</strong>
+    </div>
+    <div class="copy">
+      <h2>{{ property.nombre }}</h2>
+      <p>{{ property.descripcion || property.direccion }}</p>
+      <div class="meta">
+        <span>{{ property.estrellas }} estrellas</span>
+        <span *ngIf="property.tienePiscina">Piscina</span>
+        <span *ngIf="property.admiteMascotas">Pet friendly</span>
+      </div>
+      <div class="footer">
+        <strong>${{ property.precioNocheMinimo }} <small>/ noche</small></strong>
+        <a [routerLink]="['/alojamientos', property.alojamientoId]">Ver detalle</a>
+      </div>
+    </div>
+  </article>
+</section>
+
+<ng-template #loadingTpl>
+  <p class="loading">Cargando catalogo y aplicando fallback demo si la API no responde...</p>
+</ng-template>

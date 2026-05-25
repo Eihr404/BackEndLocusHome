@@ -1,0 +1,87 @@
+.detail-shell {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr;
+  gap: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.headline,
+.booking-box,
+.rooms {
+  border-radius: 1.7rem;
+  background: rgba(255, 249, 242, 0.92);
+  color: #1b2d29;
+  padding: 1.5rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: #8a7156;
+}
+
+.headline h1 {
+  margin: 0.35rem 0 0.8rem;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.tags span {
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: #ece6da;
+}
+
+.booking-box {
+  align-self: start;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.booking-box strong {
+  font-size: 2.1rem;
+}
+
+.booking-box a {
+  display: inline-flex;
+  justify-content: center;
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: #17312d;
+  color: #fff;
+  text-decoration: none;
+}
+
+.rooms {
+  display: grid;
+  gap: 1rem;
+}
+
+.room-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1.15rem;
+  background: #f2ecdf;
+}
+
+.room-card p {
+  margin: 0.35rem 0 0;
+}
+
+.room-meta {
+  text-align: right;
+}
+
+@media (max-width: 840px) {
+  .detail-shell {
+    grid-template-columns: 1fr;
+  }
+}

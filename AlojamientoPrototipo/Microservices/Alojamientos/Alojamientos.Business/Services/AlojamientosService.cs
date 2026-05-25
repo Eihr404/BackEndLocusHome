@@ -25,6 +25,12 @@ public class AlojamientosService : IAlojamientosService
         return model != null ? AlojamientosBusinessMapper.ToResponse(model) : null;
     }
 
+    public async Task<IEnumerable<TipoAlojamientoResponse>> GetTiposAsync()
+    {
+        var models = await _dataService.GetTiposAsync();
+        return models.Select(AlojamientosBusinessMapper.ToResponse);
+    }
+
     public async Task<AlojamientoResponse> CrearAsync(CrearAlojamientoRequest request)
     {
         var model = new AlojamientoDataModel

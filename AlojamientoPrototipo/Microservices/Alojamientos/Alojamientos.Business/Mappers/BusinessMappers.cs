@@ -7,6 +7,12 @@ namespace Alojamientos.Business.Mappers;
 
 public static class AlojamientosBusinessMapper
 {
+    public static TipoAlojamientoResponse ToResponse(TipoAlojamientoDataModel model) => new(
+        model.TipoAlojamientoId,
+        model.Nombre,
+        model.Descripcion
+    );
+
     public static AlojamientoResponse ToResponse(AlojamientoDataModel model) => new(
         model.AlojamientoId,
         model.SocioId,

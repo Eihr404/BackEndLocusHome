@@ -9,8 +9,13 @@ namespace Alojamientos.DataManagement.Services;
 public class AlojamientosDataService : IAlojamientosDataService
 {
     private readonly IAlojamientosRepository _repo;
+    private readonly ITiposAlojamientoRepository _tiposRepo;
 
-    public AlojamientosDataService(IAlojamientosRepository repo) => _repo = repo;
+    public AlojamientosDataService(IAlojamientosRepository repo, ITiposAlojamientoRepository tiposRepo)
+    {
+        _repo = repo;
+        _tiposRepo = tiposRepo;
+    }
 
     public async Task<IEnumerable<AlojamientoDataModel>> GetAllAsync()
     {
@@ -22,6 +27,12 @@ public class AlojamientosDataService : IAlojamientosDataService
     {
         var entity = await _repo.GetByIdAsync(id);
         return entity != null ? AlojamientosMapper.ToDataModel(entity) : null;
+    }
+
+    public async Task<IEnumerable<TipoAlojamientoDataModel>> GetTiposAsync()
+    {
+        var entities = await _tiposRepo.GetAllAsync();
+        return entities.Select(AlojamientosMapper.ToDataModel);
     }
 
     public async Task<AlojamientoDataModel> CreateAsync(AlojamientoDataModel model)

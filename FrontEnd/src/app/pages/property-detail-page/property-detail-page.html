@@ -1,0 +1,32 @@
+<section *ngIf="property as detail" class="detail-shell">
+  <article class="headline">
+    <p class="eyebrow">{{ detail.tipoAlojamiento }} en {{ detail.ciudad }}</p>
+    <h1>{{ detail.nombre }}</h1>
+    <p>{{ detail.descripcion || detail.direccion }}</p>
+    <div class="tags">
+      <span>{{ detail.estrellas }} estrellas</span>
+      <span>{{ detail.moneda }} {{ detail.precioNocheMinimo }} base</span>
+      <span *ngIf="detail.disponible">Disponible</span>
+    </div>
+  </article>
+
+  <aside class="booking-box">
+    <strong>${{ detail.precioNocheMinimo }}</strong>
+    <small>Precio referencial por noche</small>
+    <a routerLink="/mis-reservas">Simular reserva</a>
+  </aside>
+</section>
+
+<section class="rooms">
+  <h2>Habitaciones o unidades</h2>
+  <article class="room-card" *ngFor="let room of rooms">
+    <div>
+      <strong>{{ room.nombre }}</strong>
+      <p>{{ room.capacidadAdultos }} adultos - {{ room.capacidadNinos }} ninos</p>
+    </div>
+    <div class="room-meta">
+      <span>{{ room.estado }}</span>
+      <strong>${{ room.precioNoche }}</strong>
+    </div>
+  </article>
+</section>

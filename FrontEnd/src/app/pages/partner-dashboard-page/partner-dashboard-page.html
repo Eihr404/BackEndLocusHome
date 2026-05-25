@@ -1,0 +1,29 @@
+<section class="dashboard-hero">
+  <div>
+    <p class="eyebrow">Vista socio</p>
+    <h1>Administra tu oferta sin salir de la SPA.</h1>
+    <p>
+      Este panel separa claramente la experiencia del socio respecto a la del cliente,
+      pero todo sigue viviendo bajo el mismo <code>index.html</code>.
+    </p>
+  </div>
+</section>
+
+<section class="metrics-grid">
+  <article class="metric" *ngFor="let metric of metrics()">
+    <span>{{ metric.label }}</span>
+    <strong>{{ metric.value }}</strong>
+    <p>{{ metric.detail }}</p>
+  </article>
+</section>
+
+<section class="table-card">
+  <h2>Propiedades destacadas</h2>
+  <article class="property-row" *ngFor="let property of properties()">
+    <div>
+      <strong>{{ property.nombre }}</strong>
+      <p>{{ property.ciudad }} · {{ property.tipoAlojamiento }}</p>
+    </div>
+    <strong>${{ property.precioNocheMinimo }}</strong>
+  </article>
+</section>

@@ -1,0 +1,119 @@
+<section class="properties-layout">
+  <article class="form-card">
+    <p class="eyebrow">Gestion real de alojamientos</p>
+    <h1>{{ editingPropertyId ? 'Editar alojamiento' : 'Nuevo alojamiento' }}</h1>
+    <p class="helper">
+      Este formulario usa <code>POST /api/v1/alojamientos</code> y <code>PUT /api/v1/alojamientos/id</code>
+      del microservicio de alojamientos.
+    </p>
+
+    <form (ngSubmit)="submitProperty()">
+      <input [(ngModel)]="propertyForm.nombre" name="nombre" placeholder="Nombre comercial" required />
+      <input [(ngModel)]="propertyForm.ciudad" name="ciudad" placeholder="Ciudad" required />
+      <input [(ngModel)]="propertyForm.direccion" name="direccion" placeholder="Direccion" required />
+
+      <label>
+        Tipo de alojamiento
+        <select [(ngModel)]="propertyForm.tipoAlojamientoId" name="tipoAlojamientoId">
+          <option *ngFor="let option of tipoOptions()" [ngValue]="option.id">{{ option.nombre }}</option>
+        </select>
+      </label>
+
+      <label>
+        Estrellas
+        <input [(ngModel)]="propertyForm.estrellas" name="estrellas" type="number" min="1" max="5" />
+      </label>
+
+      <textarea [(ngModel)]="propertyForm.descripcion" name="descripcion" placeholder="Descripcion"></textarea>
+
+      <div class="check-grid">
+        <label><input [(ngModel)]="propertyForm.admiteMascotas" name="admiteMascotas" type="checkbox" /> Admite mascotas</label>
+        <label><input [(ngModel)]="propertyForm.tienePiscina" name="tienePiscina" type="checkbox" /> Tiene piscina</label>
+        <label><input [(ngModel)]="propertyForm.tieneParqueadero" name="tieneParqueadero" type="checkbox" /> Tiene parqueadero</label>
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" [disabled]="saving()">{{ editingPropertyId ? 'Actualizar' : 'Guardar alojamiento' }}</button>
+        <button *ngIf="editingPropertyId" class="secondary" type="button" (click)="cancelPropertyEdit()">Cancelar</button>
+      </div>
+    </form>
+  </article>
+
+  <article class="list-card">
+    <div class="list-head">
+      <div>
+        <h2>Inventario del socio</h2>
+        <p *ngIf="loading()">Cargando desde la API...</p>
+      </div>
+      <span class="badge">{{ properties().length }} registros</span>
+    </div>
+
+    <p *ngIf="message()" class="message">{{ message() }}</p>
+
+    <div class="property-item" *ngFor="let property of properties()" [class.selected]="selectedProperty()?.alojamientoId === property.alojamientoId">
+      <div class="property-main" (click)="selectProperty(property)">
+        <strong>{{ property.nombre }}</strong>
+        <p>{{ property.ciudad }} · {{ property.tipoAlojamiento }} · Estado {{ property.estado || 'Pendiente' }}</p>
+      </div>
+      <div class="property-actions">
+        <button type="button" class="secondary" (click)="editProperty(property)">Editar</button>
+        <button type="button" class="secondary" (click)="selectProperty(property)">Habitaciones</button>
+        <button type="button" class="danger" (click)="deleteProperty(property)">Eliminar</button>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section *ngIf="selectedProperty() as property" class="rooms-layout">
+  <article class="form-card">
+    <p class="eyebrow">Habitaciones reales</p>
+    <h2>{{ editingRoomId ? 'Editar habitacion' : 'Nueva habitacion' }} para {{ property.nombre }}</h2>
+    <p class="helper">
+      Este formulario usa <code>POST /api/v1/alojamientos/id/habitaciones</code> y <code>PUT /api/v1/habitaciones/id</code>.
+    </p>
+
+    <form (ngSubmit)="submitRoom()">
+      <input [(ngModel)]="roomForm.nombre" name="roomNombre" placeholder="Nombre de la habitacion" required />
+      <textarea [(ngModel)]="roomForm.descripcion" name="roomDescripcion" placeholder="Descripcion"></textarea>
+
+      <div class="grid-two">
+        <input [(ngModel)]="roomForm.capacidadAdultos" name="capacidadAdultos" type="number" min="1" placeholder="Adultos" required />
+        <input [(ngModel)]="roomForm.capacidadNinos" name="capacidadNinos" type="number" min="0" placeholder="Ninos" required />
+        <input [(ngModel)]="roomForm.numBanos" name="numBanos" type="number" min="1" placeholder="Banos" required />
+        <input [(ngModel)]="roomForm.numDormitorios" name="numDormitorios" type="number" min="1" placeholder="Dormitorios" required />
+        <input [(ngModel)]="roomForm.superficieM2" name="superficieM2" type="number" min="0" placeholder="Superficie m2" />
+        <input [(ngModel)]="roomForm.precioNoche" name="precioNoche" type="number" min="0" step="0.01" placeholder="Precio por noche" required />
+      </div>
+
+      <div class="check-grid">
+        <label><input [(ngModel)]="roomForm.tieneCocina" name="tieneCocina" type="checkbox" /> Tiene cocina</label>
+        <label><input [(ngModel)]="roomForm.tieneAireAcondicionado" name="tieneAireAcondicionado" type="checkbox" /> Aire acondicionado</label>
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" [disabled]="saving()">{{ editingRoomId ? 'Actualizar habitacion' : 'Guardar habitacion' }}</button>
+        <button *ngIf="editingRoomId" class="secondary" type="button" (click)="cancelRoomEdit()">Cancelar</button>
+      </div>
+    </form>
+  </article>
+
+  <article class="list-card">
+    <div class="list-head">
+      <div>
+        <h2>Habitaciones registradas</h2>
+        <p>{{ rooms().length }} habitaciones para {{ property.nombre }}</p>
+      </div>
+    </div>
+
+    <div class="room-item" *ngFor="let room of rooms()">
+      <div>
+        <strong>{{ room.nombre }}</strong>
+        <p>{{ room.capacidadAdultos }} adultos · {{ room.capacidadNinos }} ninos · ${{ room.precioNoche }}</p>
+      </div>
+      <div class="property-actions">
+        <button type="button" class="secondary" (click)="editRoom(room)">Editar</button>
+        <button type="button" class="danger" (click)="deleteRoom(room)">Eliminar</button>
+      </div>
+    </div>
+  </article>
+</section>

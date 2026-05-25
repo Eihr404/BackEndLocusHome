@@ -1,0 +1,15 @@
+<section class="reservations-card">
+  <p class="eyebrow">Operaciones del socio</p>
+  <h1>Reservas recibidas</h1>
+
+  <article class="reservation-row" *ngFor="let reservation of reservations$ | async">
+    <div>
+      <strong>{{ reservation.clienteNombre }}</strong>
+      <p>{{ reservation.alojamientoNombre }}</p>
+    </div>
+    <div class="status-block">
+      <span>{{ reservation.estado }}</span>
+      <strong>${{ reservation.total }}</strong>
+    </div>
+  </article>
+</section>

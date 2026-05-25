@@ -8,6 +8,7 @@ public interface IAlojamientosService
 {
     Task<IEnumerable<AlojamientoResponse>> GetAllAsync();
     Task<AlojamientoResponse?> GetByIdAsync(int id);
+    Task<IEnumerable<TipoAlojamientoResponse>> GetTiposAsync();
     Task<AlojamientoResponse> CrearAsync(CrearAlojamientoRequest request);
     Task ActualizarAsync(int id, ActualizarAlojamientoRequest request);
     Task EliminarAsync(int id);

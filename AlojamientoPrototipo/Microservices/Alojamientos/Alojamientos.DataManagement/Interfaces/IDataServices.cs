@@ -6,6 +6,7 @@ public interface IAlojamientosDataService
 {
     Task<IEnumerable<AlojamientoDataModel>> GetAllAsync();
     Task<AlojamientoDataModel?> GetByIdAsync(int id);
+    Task<IEnumerable<TipoAlojamientoDataModel>> GetTiposAsync();
     Task<AlojamientoDataModel> CreateAsync(AlojamientoDataModel model);
     Task UpdateAsync(AlojamientoDataModel model);
     Task DeleteAsync(int id);

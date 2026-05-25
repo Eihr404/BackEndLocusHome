@@ -44,3 +44,9 @@ public record AlojamientoResponse(
     string Estado,
     DateTime FechaCreacion
 );
+
+public record TipoAlojamientoResponse(
+    int TipoAlojamientoId,
+    string Nombre,
+    string? Descripcion
+);

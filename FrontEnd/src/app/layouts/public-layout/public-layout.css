@@ -1,0 +1,141 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  color: #f6efe6;
+  background:
+    radial-gradient(circle at top left, rgba(233, 140, 69, 0.25), transparent 32%),
+    radial-gradient(circle at top right, rgba(34, 101, 84, 0.35), transparent 28%),
+    linear-gradient(180deg, #0f1f1d 0%, #152826 42%, #f2e4cf 42%, #f4ecde 100%);
+}
+
+.shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1rem 2rem;
+  backdrop-filter: blur(18px);
+  background: rgba(12, 28, 25, 0.76);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 0.85rem;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand small {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, #eb8f4f, #f3c56b);
+  color: #1f241e;
+  font-weight: 800;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.nav a,
+.ghost-btn,
+.primary-btn {
+  text-decoration: none;
+  transition: 180ms ease;
+}
+
+.nav a {
+  color: rgba(255, 255, 255, 0.75);
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+}
+
+.nav a.active,
+.nav a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.session-pill {
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.session-pill small {
+  display: block;
+  color: #f3c56b;
+}
+
+.ghost-btn,
+.primary-btn,
+button.ghost-btn {
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-btn {
+  border-color: transparent;
+  background: linear-gradient(135deg, #eb8f4f, #f3c56b);
+  color: #1f241e;
+  font-weight: 700;
+}
+
+.ghost-btn:hover,
+.primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.content {
+  width: min(1220px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+@media (max-width: 980px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .nav,
+  .actions {
+    justify-content: flex-start;
+  }
+}

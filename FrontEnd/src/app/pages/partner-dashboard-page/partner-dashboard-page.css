@@ -1,0 +1,55 @@
+.dashboard-hero,
+.table-card {
+  padding: 1.6rem;
+  border-radius: 1.7rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #517092;
+  font-size: 0.75rem;
+}
+
+.dashboard-hero h1 {
+  margin: 0.4rem 0 0.8rem;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.metric {
+  padding: 1.2rem;
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.metric span {
+  color: #517092;
+}
+
+.metric strong {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 2rem;
+}
+
+.property-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(18, 34, 54, 0.08);
+}
+
+@media (max-width: 920px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

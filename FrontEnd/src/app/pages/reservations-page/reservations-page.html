@@ -1,0 +1,18 @@
+<section class="reservations-shell">
+  <div class="header">
+    <p class="eyebrow">Area cliente protegida por guard</p>
+    <h1>Mis reservas</h1>
+  </div>
+
+  <article class="reservation-card" *ngFor="let reservation of reservations">
+    <div>
+      <strong>{{ reservation.alojamientoNombre }}</strong>
+      <p>{{ reservation.fechaEntrada }} a {{ reservation.fechaSalida }}</p>
+      <small>{{ reservation.codigoReserva }}</small>
+    </div>
+    <div class="amount">
+      <span>{{ reservation.estado }}</span>
+      <strong>${{ reservation.total }} {{ reservation.moneda }}</strong>
+    </div>
+  </article>
+</section>

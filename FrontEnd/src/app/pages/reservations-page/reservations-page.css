@@ -1,0 +1,39 @@
+.reservations-shell {
+  display: grid;
+  gap: 1rem;
+  color: #17312d;
+}
+
+.header {
+  padding: 0.5rem 0 1rem;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #8a7156;
+  font-size: 0.75rem;
+}
+
+.header h1 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.reservation-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.3rem 1.5rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 249, 242, 0.92);
+}
+
+.reservation-card p,
+.reservation-card small {
+  margin: 0.25rem 0 0;
+}
+
+.amount {
+  text-align: right;
+}

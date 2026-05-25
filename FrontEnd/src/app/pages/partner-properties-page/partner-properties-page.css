@@ -1,0 +1,171 @@
+.properties-layout,
+.rooms-layout {
+  display: grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-card,
+.list-card {
+  padding: 1.5rem;
+  border-radius: 1.7rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #517092;
+  font-size: 0.75rem;
+}
+
+.helper,
+.list-head p,
+.property-item p,
+.room-item p {
+  color: #4f6278;
+}
+
+form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+input,
+textarea,
+select,
+button {
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(18, 34, 54, 0.12);
+  font: inherit;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  color: #102239;
+  font-weight: 600;
+}
+
+button {
+  background: #102239;
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: transparent;
+  color: #102239;
+}
+
+button.danger {
+  background: #7c1f2d;
+  color: #fff;
+}
+
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.check-grid label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: #f4f8fd;
+  font-weight: 500;
+}
+
+.check-grid input {
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.actions-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.list-head,
+.property-item,
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.list-head {
+  align-items: start;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  background: #e7f0fa;
+  color: #23405f;
+  font-weight: 700;
+}
+
+.message {
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: #eef6ff;
+  color: #23405f;
+}
+
+.property-item,
+.room-item {
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(18, 34, 54, 0.08);
+}
+
+.property-item.selected {
+  background: rgba(76, 161, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin: 0.3rem 0;
+}
+
+.property-main {
+  flex: 1;
+  cursor: pointer;
+}
+
+.property-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.property-item p,
+.room-item p {
+  margin: 0.3rem 0 0;
+}
+
+@media (max-width: 960px) {
+  .properties-layout,
+  .rooms-layout,
+  .check-grid,
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+}
