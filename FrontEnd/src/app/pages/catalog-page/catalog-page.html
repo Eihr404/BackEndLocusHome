@@ -5,9 +5,9 @@
   </div>
 
   <form class="filters" (ngSubmit)="loadCatalog()">
-    <input [(ngModel)]="search" name="search" placeholder="Nombre o concepto" />
-    <input [(ngModel)]="city" name="city" placeholder="Ciudad destino" />
-    <button type="submit">Buscar</button>
+    <input [(ngModel)]="search" name="search" placeholder="Nombre o concepto" (ngModelChange)="onFilterChange()" />
+    <input [(ngModel)]="city" name="city" placeholder="Ciudad destino" (ngModelChange)="onFilterChange()" />
+    <button type="submit">Recargar</button>
   </form>
 </section>
 
@@ -35,5 +35,5 @@
 </section>
 
 <ng-template #loadingTpl>
-  <p class="loading">Cargando catalogo y aplicando fallback demo si la API no responde...</p>
+  <p class="loading">Cargando catalogo...</p>
 </ng-template>

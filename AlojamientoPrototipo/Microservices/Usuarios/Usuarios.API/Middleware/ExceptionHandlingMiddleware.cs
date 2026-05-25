@@ -31,6 +31,7 @@ public class ExceptionHandlingMiddleware
             UsuarioNotFoundException => HttpStatusCode.NotFound,
             ClienteNotFoundException => HttpStatusCode.NotFound,
             EmailAlreadyExistsException => HttpStatusCode.Conflict,
+            InvalidClientProfileDataException => HttpStatusCode.BadRequest,
             AuthException => HttpStatusCode.Unauthorized,
             KeyNotFoundException => HttpStatusCode.NotFound,
             _ => HttpStatusCode.InternalServerError

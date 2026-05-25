@@ -29,10 +29,35 @@ public class ClientesDataService : IClientesDataService
         return entity != null ? ClientesMapper.ToDataModel(entity) : null;
     }
 
+    public async Task<ClienteDataModel?> GetByEmailAsync(string email)
+    {
+        var entity = await _repo.GetByEmailAsync(email);
+        return entity != null ? ClientesMapper.ToDataModel(entity) : null;
+    }
+
     public async Task<ClienteDataModel?> GetByUsuarioIdAsync(int usuarioId)
     {
         var entity = await _repo.GetByUsuarioIdAsync(usuarioId);
         return entity != null ? ClientesMapper.ToDataModel(entity) : null;
+    }
+
+    public async Task<ClienteDataModel> CreateAsync(ClienteDataModel model)
+    {
+        var entity = new DataAccess.Entities.ClienteEntity
+        {
+            UsuarioId = model.UsuarioId,
+            Cedula = model.Cedula,
+            FotoUrl = model.FotoUrl,
+            Telefono = model.Telefono,
+            Domicilio = model.Domicilio,
+            Email = model.Email,
+            TotalReservas = model.TotalReservas,
+            FechaCreacion = model.FechaCreacion,
+            FechaModificacion = model.FechaModificacion,
+        };
+
+        var created = await _repo.AddAsync(entity);
+        return ClientesMapper.ToDataModel(created);
     }
 
     public async Task RegistrarClienteAsync(string email, string password, string nombre, string cedula, string telefono, string domicilio)

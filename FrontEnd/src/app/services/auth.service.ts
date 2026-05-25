@@ -17,6 +17,19 @@ type LoginPayload = {
   usuarioId?: number;
   clienteId?: number | null;
 };
+type EnsureClientProfileRequest = {
+  usuarioId: number;
+  email: string;
+  nombreCompleto: string;
+  cedula?: string;
+  telefono?: string;
+  domicilio?: string;
+};
+type ClientProfilePayload = {
+  clienteId?: number;
+  email?: string;
+  usuarioId?: number | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -83,6 +96,39 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.upsertClientProfile(payload.email, payload.nombreCompleto);
+        }),
+      );
+  }
+
+  ensureClientProfile(payload: EnsureClientProfileRequest) {
+    return this.http
+      .post<ApiEnvelope<ClientProfilePayload> | ClientProfilePayload>(
+        `${USUARIOS_API_BASE_URL}/Clientes/asegurar-perfil`,
+        payload,
+      )
+      .pipe(
+        map((response): ClientProfilePayload => {
+          const envelope = response as ApiEnvelope<ClientProfilePayload>;
+          return envelope.data ?? (response as ClientProfilePayload);
+        }),
+        tap((profile) => {
+          if (!profile?.clienteId) {
+            throw new Error('No se pudo obtener el perfil cliente.');
+          }
+
+          const currentSession = this.sessionSignal();
+          if (currentSession) {
+            this.persistSession({
+              ...currentSession,
+              clienteId: profile.clienteId,
+            });
+          }
+
+          this.upsertClientProfile(
+            payload.email,
+            payload.nombreCompleto,
+            profile.clienteId,
+          );
         }),
       );
   }

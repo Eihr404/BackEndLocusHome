@@ -17,6 +17,11 @@ public class EmailAlreadyExistsException : Exception
     public EmailAlreadyExistsException(string email) : base($"El email {email} ya está registrado") { }
 }
 
+public class InvalidClientProfileDataException : Exception
+{
+    public InvalidClientProfileDataException(string message) : base(message) { }
+}
+
 public class AuthException : Exception
 {
     public AuthException(string message) : base(message) { }

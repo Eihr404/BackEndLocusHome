@@ -118,7 +118,11 @@ export class AlojamientosService {
         params,
       })
       .pipe(
-        map((response) => this.unwrapList(response).map((item) => this.normalizeProperty(item))),
+        map((response) => {
+          const raw = this.unwrapList(response);
+          if (raw.length > 0) console.log("[AlojamientosService] primer alojamiento crudo:", JSON.stringify(raw[0]));
+          return raw.map((item) => this.normalizeProperty(item));
+        }),
         map((items) => this.applyLocalFilters(items, filters)),
         catchError(() => of(this.applyLocalFilters(MOCK_ALOJAMIENTOS, filters))),
       );
@@ -140,10 +144,16 @@ export class AlojamientosService {
     return this.http
       .get<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/alojamientos/${alojamientoId}/habitaciones`)
       .pipe(
-        map((response) => this.unwrapCollection(response).map((room) => this.normalizeRoom(room))),
-        catchError(() =>
-          of(MOCK_HABITACIONES.filter((room) => room.alojamientoId === alojamientoId)),
-        ),
+        map((response) => {
+          console.log('[AlojamientosService] respuesta cruda habitaciones:', JSON.stringify(response));
+          const rooms = this.unwrapCollection(response).map((room) => this.normalizeRoom(room));
+          console.log('[AlojamientosService] habitaciones normalizadas:', rooms);
+          return rooms;
+        }),
+        catchError((err) => {
+          console.error('[AlojamientosService] error en getRoomsByProperty:', err);
+          return of(MOCK_HABITACIONES.filter((room) => room.alojamientoId === alojamientoId));
+        }),
       );
   }
 

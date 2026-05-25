@@ -22,8 +22,13 @@ public static class ClientesMapper
 
     public static void UpdateEntity(ClienteEntity entity, ClienteDataModel model)
     {
+        entity.UsuarioId = model.UsuarioId;
+        entity.Cedula = model.Cedula;
+        entity.Email = model.Email;
         entity.Telefono = model.Telefono;
         entity.Domicilio = model.Domicilio;
         entity.FotoUrl = model.FotoUrl;
+        entity.TotalReservas = model.TotalReservas;
+        entity.FechaModificacion = model.FechaModificacion;
     }
 }

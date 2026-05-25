@@ -7,7 +7,9 @@ public interface IClientesDataService
     Task<IEnumerable<ClienteDataModel>> GetAllAsync();
     Task<ClienteDataModel?> GetByIdAsync(int id);
     Task<ClienteDataModel?> GetByCedulaAsync(string cedula);
+    Task<ClienteDataModel?> GetByEmailAsync(string email);
     Task<ClienteDataModel?> GetByUsuarioIdAsync(int usuarioId);
+    Task<ClienteDataModel> CreateAsync(ClienteDataModel model);
     Task RegistrarClienteAsync(string email, string password, string nombre, string cedula, string telefono, string domicilio);
     Task UpdateAsync(ClienteDataModel model);
     Task DeleteAsync(int id);

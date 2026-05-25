@@ -47,6 +47,18 @@ public class AuthService : IAuthService
         }
 
         var cliente = await _clientesDataService.GetByUsuarioIdAsync(usuario.UsuarioId);
+        if (cliente is null)
+        {
+            var clientePorCorreo = await _clientesDataService.GetByEmailAsync(email);
+            if (clientePorCorreo != null)
+            {
+                clientePorCorreo.UsuarioId = usuario.UsuarioId;
+                clientePorCorreo.FechaModificacion = DateTime.UtcNow;
+                await _clientesDataService.UpdateAsync(clientePorCorreo);
+                cliente = clientePorCorreo;
+            }
+        }
+
         _logger.LogInformation(
             "Login exitoso para {Email}. UsuarioId={UsuarioId}, ClienteId={ClienteId}, Rol={Rol}",
             email,

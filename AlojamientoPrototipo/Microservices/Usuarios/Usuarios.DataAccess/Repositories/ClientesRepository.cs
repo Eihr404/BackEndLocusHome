@@ -18,6 +18,9 @@ public class ClientesRepository : RepositoryBase<ClienteEntity>, IClientesReposi
     public async Task<ClienteEntity?> GetByCedulaAsync(string cedula)
         => await _db.Clientes.Include(c => c.Usuario).FirstOrDefaultAsync(c => c.Cedula == cedula);
 
+    public async Task<ClienteEntity?> GetByEmailAsync(string email)
+        => await _db.Clientes.Include(c => c.Usuario).FirstOrDefaultAsync(c => c.Email == email);
+
     public async Task<ClienteEntity?> GetByUsuarioIdAsync(int usuarioId)
         => await _db.Clientes.Include(c => c.Usuario).FirstOrDefaultAsync(c => c.UsuarioId == usuarioId);
 

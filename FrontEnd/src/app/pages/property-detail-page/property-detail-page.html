@@ -1,4 +1,6 @@
-<section *ngIf="property as detail" class="detail-shell">
+<p *ngIf="loadingProperty" class="loading">Cargando alojamiento...</p>
+
+<section *ngIf="!loadingProperty && property as detail" class="detail-shell">
   <article class="headline">
     <p class="eyebrow">{{ detail.tipoAlojamiento }} en {{ detail.ciudad }}</p>
     <h1>{{ detail.nombre }}</h1>
@@ -13,21 +15,91 @@
   <aside class="booking-box">
     <strong>${{ detail.precioNocheMinimo }}</strong>
     <small>Precio referencial por noche</small>
-    <a routerLink="/mis-reservas">Simular reserva</a>
+
+    <label>
+      Check-in
+      <input [(ngModel)]="bookingForm.fechaCheckIn" type="date" name="fechaCheckIn" />
+    </label>
+
+    <label>
+      Check-out
+      <input [(ngModel)]="bookingForm.fechaCheckOut" type="date" name="fechaCheckOut" />
+    </label>
+
+    <div class="booking-grid">
+      <label>
+        Adultos
+        <input [(ngModel)]="bookingForm.numAdultos" type="number" min="1" name="numAdultos" />
+      </label>
+
+      <label>
+        Ninos
+        <input [(ngModel)]="bookingForm.numNinos" type="number" min="0" name="numNinos" />
+      </label>
+    </div>
+
+    <label class="check-option">
+      <input [(ngModel)]="bookingForm.llevaMascotas" type="checkbox" name="llevaMascotas" />
+      Llevo mascotas
+    </label>
+
+    <label>
+      Codigo de descuento
+      <input [(ngModel)]="bookingForm.codigoDescuento" type="text" name="codigoDescuento" placeholder="Opcional" />
+    </label>
+
+    <section *ngIf="showClientProfileFields" class="client-profile-box">
+      <strong>Activa tu perfil de cliente</strong>
+      <small>Si tu correo ya existe como cliente, se asociara automaticamente. Si no, completa estos datos una sola vez.</small>
+
+      <label>
+        Cedula
+        <input [(ngModel)]="clientProfileForm.cedula" type="text" maxlength="10" name="cedula" placeholder="0102030405" />
+      </label>
+
+      <label>
+        Telefono
+        <input [(ngModel)]="clientProfileForm.telefono" type="text" maxlength="20" name="telefono" placeholder="0999999999" />
+      </label>
+
+      <label>
+        Domicilio
+        <input [(ngModel)]="clientProfileForm.domicilio" type="text" name="domicilio" placeholder="Tu direccion principal" />
+      </label>
+    </section>
+
+    <p *ngIf="bookingError" class="booking-error">{{ bookingError }}</p>
+    <p *ngIf="bookingMessage" class="booking-success">{{ bookingMessage }}</p>
+
+    <button type="button" (click)="reserveSelectedRoom()" [disabled]="bookingLoading || !rooms.length">
+      {{ bookingLoading ? 'Reservando...' : 'Reservar habitacion seleccionada' }}
+    </button>
   </aside>
 </section>
 
+<p *ngIf="!loadingProperty && !property">No se encontro el alojamiento.</p>
+
 <section class="rooms">
   <h2>Habitaciones o unidades</h2>
-  <p *ngIf="!rooms.length">No hay habitaciones registradas para este alojamiento todavia.</p>
-  <article class="room-card" *ngFor="let room of rooms">
+  <p *ngIf="loadingRooms">Cargando habitaciones...</p>
+  <p *ngIf="!loadingRooms && !rooms.length">No hay habitaciones registradas para este alojamiento todavia.</p>
+  <article
+    class="room-card"
+    *ngFor="let room of rooms"
+    [class.selected]="selectedRoomId === room.habitacionId"
+    (click)="selectRoom(room)">
     <div>
       <strong>{{ room.nombre }}</strong>
+      <p>{{ room.descripcion || 'Sin descripcion adicional.' }}</p>
       <p>{{ room.capacidadAdultos }} adultos - {{ room.capacidadNinos }} ninos</p>
+      <small *ngIf="room.numDormitorios">Dormitorios: {{ room.numDormitorios }}</small>
     </div>
     <div class="room-meta">
-      <span>{{ room.estado }}</span>
+      <span>{{ room.estado || 'Disponible' }}</span>
       <strong>${{ room.precioNoche }}</strong>
+      <button type="button" class="select-room-btn" (click)="selectRoom(room); $event.stopPropagation()">
+        {{ selectedRoomId === room.habitacionId ? 'Seleccionada' : 'Elegir' }}
+      </button>
     </div>
   </article>
 </section>

@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { catchError, map, of } from 'rxjs';
 
-import { ReservaResumen } from '../models/reserva.model';
-import { RESERVAS_API_BASE_URL } from './api.config';
+import { CrearReservaRequest, ReservaCreada, ReservaResumen } from '../models/reserva.model';
+import { API_GATEWAY_BASE_URL, RESERVAS_API_BASE_URL } from './api.config';
 
 const MOCK_RESERVAS: ReservaResumen[] = [
   {
@@ -49,6 +49,12 @@ export class ReservasService {
 
   getPartnerReservations() {
     return of(MOCK_RESERVAS);
+  }
+
+  createReservation(payload: CrearReservaRequest) {
+    return this.http
+      .post<unknown>(`${API_GATEWAY_BASE_URL}/booking`, payload)
+      .pipe(map((response) => this.normalizeCreatedReservation(response)));
   }
 
   private unwrapCollection(response: unknown) {
@@ -98,5 +104,43 @@ export class ReservasService {
       total: Number(item.total ?? item.Total ?? 0) || 0,
       moneda: item.moneda ?? item.Moneda ?? 'USD',
     };
+  }
+
+  private normalizeCreatedReservation(response: unknown): ReservaCreada {
+    const item = this.unwrapItem(response);
+
+    return {
+      reservaId: item?.reservaId ?? item?.ReservaId ?? 0,
+      codigoReserva: item?.codigoReserva ?? item?.CodigoReserva ?? undefined,
+      estado: item?.estado ?? item?.Estado ?? 'Pendiente',
+      total: Number(item?.total ?? item?.Total ?? 0) || 0,
+      moneda: item?.moneda ?? item?.Moneda ?? 'USD',
+    };
+  }
+
+  private unwrapItem(response: unknown) {
+    if (!response || typeof response !== 'object') {
+      return null;
+    }
+
+    const record = response as Record<string, unknown>;
+    if ('reservaId' in record || 'ReservaId' in record || 'codigoReserva' in record || 'CodigoReserva' in record) {
+      return response as any;
+    }
+
+    const collection = response as { data?: unknown; value?: unknown; items?: unknown };
+    if (Array.isArray(collection.data)) {
+      return collection.data[0] ?? null;
+    }
+
+    if (Array.isArray(collection.value)) {
+      return collection.value[0] ?? null;
+    }
+
+    if (Array.isArray(collection.items)) {
+      return collection.items[0] ?? null;
+    }
+
+    return response as any;
   }
 }

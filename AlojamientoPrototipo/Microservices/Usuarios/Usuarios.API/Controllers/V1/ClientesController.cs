@@ -37,6 +37,10 @@ public class ClientesController : ControllerBase
         return Created("", new { mensaje = "Cliente registrado exitosamente" });
     }
 
+    [HttpPost("asegurar-perfil")]
+    public async Task<IActionResult> AsegurarPerfil([FromBody] AsegurarPerfilClienteRequest request)
+        => Ok(await _service.AsegurarPerfilClienteAsync(request));
+
     [HttpPut("{id}")]
     public async Task<IActionResult> Actualizar(int id, [FromBody] ActualizarClienteRequest request)
     {

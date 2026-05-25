@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
@@ -14,11 +14,28 @@ import { AlojamientosService } from '../../services/alojamientos.service';
 })
 export class CatalogPageComponent implements OnInit {
   private readonly alojamientosService = inject(AlojamientosService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   search = '';
   city = '';
   loading = true;
-  properties: AlojamientoCard[] = [];
+
+  private allProperties: AlojamientoCard[] = [];
+
+  get properties(): AlojamientoCard[] {
+    const searchLower = this.search.trim().toLowerCase();
+    const cityLower = this.city.trim().toLowerCase();
+
+    return this.allProperties.filter((item) => {
+      const matchSearch = searchLower
+        ? `${item.nombre} ${item.descripcion ?? ''}`.toLowerCase().includes(searchLower)
+        : true;
+      const matchCity = cityLower
+        ? item.ciudad.toLowerCase().includes(cityLower)
+        : true;
+      return matchSearch && matchCity;
+    });
+  }
 
   ngOnInit() {
     this.loadCatalog();
@@ -26,9 +43,14 @@ export class CatalogPageComponent implements OnInit {
 
   loadCatalog() {
     this.loading = true;
-    this.alojamientosService.getCatalog({ city: this.city, search: this.search }).subscribe((items) => {
-      this.properties = items;
+    this.alojamientosService.getCatalog().subscribe((items) => {
+      this.allProperties = items;
       this.loading = false;
+      this.cdr.detectChanges();
     });
+  }
+
+  onFilterChange() {
+    this.cdr.detectChanges();
   }
 }

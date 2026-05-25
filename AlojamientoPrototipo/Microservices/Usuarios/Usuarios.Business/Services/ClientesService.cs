@@ -40,6 +40,61 @@ public class ClientesService : IClientesService
         return model != null ? ClientesBusinessMapper.ToResponse(model) : null;
     }
 
+    public async Task<ClienteResponse> AsegurarPerfilClienteAsync(AsegurarPerfilClienteRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+        var usuario = await _usuarioData.GetByIdAsync(request.UsuarioId)
+            ?? throw new UsuarioNotFoundException(email);
+
+        if (!string.Equals(usuario.Email, email, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidClientProfileDataException("El usuario autenticado no coincide con el correo indicado.");
+        }
+
+        var cliente = await _clienteData.GetByUsuarioIdAsync(usuario.UsuarioId);
+        if (cliente != null)
+        {
+            return ClientesBusinessMapper.ToResponse(cliente);
+        }
+
+        cliente = await _clienteData.GetByEmailAsync(email);
+        if (cliente != null)
+        {
+            cliente.UsuarioId = usuario.UsuarioId;
+            if (string.IsNullOrWhiteSpace(cliente.Cedula) && !string.IsNullOrWhiteSpace(request.Cedula))
+                cliente.Cedula = request.Cedula.Trim();
+            if (string.IsNullOrWhiteSpace(cliente.Telefono) && !string.IsNullOrWhiteSpace(request.Telefono))
+                cliente.Telefono = request.Telefono.Trim();
+            if (string.IsNullOrWhiteSpace(cliente.Domicilio) && !string.IsNullOrWhiteSpace(request.Domicilio))
+                cliente.Domicilio = request.Domicilio.Trim();
+            cliente.FechaModificacion = DateTime.UtcNow;
+
+            await _clienteData.UpdateAsync(cliente);
+            return ClientesBusinessMapper.ToResponse(cliente);
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Cedula) ||
+            string.IsNullOrWhiteSpace(request.Telefono) ||
+            string.IsNullOrWhiteSpace(request.Domicilio))
+        {
+            throw new InvalidClientProfileDataException(
+                "Completa cédula, teléfono y domicilio para activar tu perfil de cliente.");
+        }
+
+        var creado = await _clienteData.CreateAsync(new DataManagement.Models.ClienteDataModel
+        {
+            UsuarioId = usuario.UsuarioId,
+            Cedula = request.Cedula.Trim(),
+            Telefono = request.Telefono.Trim(),
+            Domicilio = request.Domicilio.Trim(),
+            Email = email,
+            TotalReservas = 0,
+            FechaCreacion = DateTime.UtcNow,
+        });
+
+        return ClientesBusinessMapper.ToResponse(creado);
+    }
+
     public async Task RegistrarClienteAsync(RegistrarClienteRequest request)
     {
         await _clienteData.RegistrarClienteAsync(
