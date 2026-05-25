@@ -40,10 +40,24 @@ export class ReservasService {
     }
 
     return this.http
-      .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/cliente/${clienteId}`)
+      .get<unknown>(`${API_GATEWAY_BASE_URL}/booking/resumen/cliente/${clienteId}`)
       .pipe(
         map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
-        catchError(() => of(options?.demoMode && clienteId === 1 ? MOCK_RESERVAS : [])),
+        catchError(() =>
+          this.http
+            .get<unknown>(`${API_GATEWAY_BASE_URL}/booking/cliente/${clienteId}`)
+            .pipe(
+              map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
+              catchError(() =>
+                this.http
+                  .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/cliente/${clienteId}`)
+                  .pipe(
+                    map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
+                    catchError(() => of(options?.demoMode && clienteId === 1 ? MOCK_RESERVAS : [])),
+                  ),
+              ),
+            ),
+        ),
       );
   }
 
@@ -66,18 +80,37 @@ export class ReservasService {
       return [];
     }
 
-    const collection = response as { data?: unknown; value?: unknown; items?: unknown };
+    const collection = response as {
+      data?: unknown;
+      Data?: unknown;
+      value?: unknown;
+      Value?: unknown;
+      items?: unknown;
+      Items?: unknown;
+    };
 
     if (Array.isArray(collection.data)) {
       return collection.data;
+    }
+
+    if (Array.isArray(collection.Data)) {
+      return collection.Data;
     }
 
     if (Array.isArray(collection.value)) {
       return collection.value;
     }
 
+    if (Array.isArray(collection.Value)) {
+      return collection.Value;
+    }
+
     if (Array.isArray(collection.items)) {
       return collection.items;
+    }
+
+    if (Array.isArray(collection.Items)) {
+      return collection.Items;
     }
 
     return [];
@@ -101,7 +134,7 @@ export class ReservasService {
       fechaEntrada: item.fechaEntrada ?? item.FechaEntrada ?? item.fechaCheckIn ?? item.FechaCheckIn ?? '',
       fechaSalida: item.fechaSalida ?? item.FechaSalida ?? item.fechaCheckOut ?? item.FechaCheckOut ?? '',
       estado: item.estado ?? item.Estado ?? 'Pendiente',
-      total: Number(item.total ?? item.Total ?? 0) || 0,
+      total: Number(item.total ?? item.Total ?? item.subTotal ?? item.SubTotal ?? 0) || 0,
       moneda: item.moneda ?? item.Moneda ?? 'USD',
     };
   }
@@ -128,17 +161,36 @@ export class ReservasService {
       return response as any;
     }
 
-    const collection = response as { data?: unknown; value?: unknown; items?: unknown };
+    const collection = response as {
+      data?: unknown;
+      Data?: unknown;
+      value?: unknown;
+      Value?: unknown;
+      items?: unknown;
+      Items?: unknown;
+    };
     if (Array.isArray(collection.data)) {
       return collection.data[0] ?? null;
+    }
+
+    if (Array.isArray(collection.Data)) {
+      return collection.Data[0] ?? null;
     }
 
     if (Array.isArray(collection.value)) {
       return collection.value[0] ?? null;
     }
 
+    if (Array.isArray(collection.Value)) {
+      return collection.Value[0] ?? null;
+    }
+
     if (Array.isArray(collection.items)) {
       return collection.items[0] ?? null;
+    }
+
+    if (Array.isArray(collection.Items)) {
+      return collection.Items[0] ?? null;
     }
 
     return response as any;

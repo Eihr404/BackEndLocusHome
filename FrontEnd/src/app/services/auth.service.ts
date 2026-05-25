@@ -93,11 +93,7 @@ export class AuthService {
         telefono: payload.telefono,
         domicilio: payload.domicilio,
       })
-      .pipe(
-        tap(() => {
-          this.upsertClientProfile(payload.email, payload.nombreCompleto);
-        }),
-      );
+      .pipe(tap(() => undefined));
   }
 
   ensureClientProfile(payload: EnsureClientProfileRequest) {
@@ -140,8 +136,13 @@ export class AuthService {
   }
 
   private persistSession(session: SessionUser) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    this.sessionSignal.set(session);
+    const normalizedSession: SessionUser = {
+      ...session,
+      clienteId: session.clienteId && session.clienteId > 0 ? session.clienteId : null,
+    };
+
+    localStorage.setItem(SESSION_KEY, JSON.stringify(normalizedSession));
+    this.sessionSignal.set(normalizedSession);
   }
 
   private readSession(): SessionUser | null {
@@ -151,7 +152,11 @@ export class AuthService {
     }
 
     try {
-      return JSON.parse(raw) as SessionUser;
+      const parsed = JSON.parse(raw) as SessionUser;
+      return {
+        ...parsed,
+        clienteId: parsed.clienteId && parsed.clienteId > 0 ? parsed.clienteId : null,
+      };
     } catch {
       localStorage.removeItem(SESSION_KEY);
       return null;
@@ -168,27 +173,27 @@ export class AuthService {
       return apiClienteId;
     }
 
-    const existing = this.readClientProfiles().find((item) => item.email.toLowerCase() === email.toLowerCase());
-    return existing?.clienteId ?? null;
+    return null;
   }
 
   private upsertClientProfile(email: string, nombreCompleto: string, forcedClienteId?: number) {
+    if (!forcedClienteId || forcedClienteId <= 0) {
+      return null;
+    }
+
     const normalizedEmail = email.trim().toLowerCase();
     const profiles = this.readClientProfiles();
     const index = profiles.findIndex((item) => item.email.toLowerCase() === normalizedEmail);
 
     if (index >= 0) {
-      const current = profiles[index];
-      const clienteId = forcedClienteId ?? current.clienteId;
-      profiles[index] = { clienteId, nombreCompleto, email: normalizedEmail };
+      profiles[index] = { clienteId: forcedClienteId, nombreCompleto, email: normalizedEmail };
       localStorage.setItem(CLIENT_PROFILES_KEY, JSON.stringify(profiles));
-      return clienteId;
+      return forcedClienteId;
     }
 
-    const nextId = forcedClienteId ?? Math.max(0, ...profiles.map((item) => item.clienteId)) + 1;
-    profiles.push({ clienteId: nextId, nombreCompleto, email: normalizedEmail });
+    profiles.push({ clienteId: forcedClienteId, nombreCompleto, email: normalizedEmail });
     localStorage.setItem(CLIENT_PROFILES_KEY, JSON.stringify(profiles));
-    return nextId;
+    return forcedClienteId;
   }
 
   private readClientProfiles(): StoredClientProfile[] {
