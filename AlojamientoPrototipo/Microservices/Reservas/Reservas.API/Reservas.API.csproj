@@ -21,6 +21,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Tools" Version="2.80.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\..\..\Shared\Shared.Protos\Protos\calendario.proto" GrpcServices="Client" Link="Protos\calendario.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Reservas.Business\Reservas.Business.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Protos\Shared.Protos.csproj" />
   </ItemGroup>

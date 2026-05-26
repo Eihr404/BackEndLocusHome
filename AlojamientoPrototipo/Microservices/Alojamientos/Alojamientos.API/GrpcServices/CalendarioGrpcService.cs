@@ -1,6 +1,7 @@
 using Grpc.Core;
 using Shared.Protos;
 using Alojamientos.Business.Interfaces;
+using Alojamientos.Business.DTOs;   
 
 namespace Alojamientos.API.GrpcServices;
 
@@ -19,39 +20,31 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
     {
         try
         {
-            var fechaInicio = DateOnly.Parse(request.FechaInicio);
-            var fechaFin = DateOnly.Parse(request.FechaFin);
-
-            // Obtener disponibilidad mensual (para simplicidad de este prototipo, asumiendo que el rango no es mayor a 1 mes, o verificando manualmente)
-            // Una mejor aproximación sería crear un método en ICalendarioService que verifique el cruce de fechas directamente.
-            
-            // Para mantenerlo sencillo, intentaremos bloquear usando un "dry-run" o simplemente usaremos el servicio de base de datos.
-            // Dado que no queremos exponer el UnitOfWork aquí, vamos a asumir que necesitamos un método en ICalendarioService
-            // que solo verifique si hay cruce (ExistsBloqueoOcupacionAsync en el DataService).
-            // Por ahora, simularemos que verificamos consultando el mes de inicio:
-            var disponibilidad = await _calendarioService.GetDisponibilidadMensualAsync(request.HabitacionId, fechaInicio.Month, fechaInicio.Year);
-            
-            // Verificamos si hay alguna fecha ocupada/bloqueada en el rango
-            var cruce = disponibilidad.Any(d => d.Fecha >= fechaInicio && d.Fecha <= fechaFin && (d.Estado == "Ocupado" || d.Estado == "Bloqueado"));
-
-            if (cruce)
+            if (!DateOnly.TryParse(request.FechaInicio, out var fechaInicio) ||
+                !DateOnly.TryParse(request.FechaFin, out var fechaFin))
             {
                 return new DisponibilidadResponse
                 {
                     Disponible = false,
-                    Mensaje = "Las fechas seleccionadas ya no están disponibles."
+                    Mensaje = "Formato de fecha inválido. Use YYYY-MM-DD."
                 };
             }
 
+            // Usa ExistsBloqueoOcupacionAsync directamente — cubre rangos multi-mes correctamente
+            bool disponible = await _calendarioService.VerificarDisponibilidadAsync(
+                request.HabitacionId, fechaInicio, fechaFin);
+
             return new DisponibilidadResponse
             {
-                Disponible = true,
-                Mensaje = "Fechas disponibles."
+                Disponible = disponible,
+                Mensaje = disponible
+                    ? "Fechas disponibles."
+                    : "Las fechas seleccionadas ya no están disponibles."
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al verificar disponibilidad por gRPC");
+            _logger.LogError(ex, "Error al verificar disponibilidad por gRPC para habitacion {HabitacionId}", request.HabitacionId);
             return new DisponibilidadResponse
             {
                 Disponible = false,
@@ -60,47 +53,48 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
         }
     }
 
-    public override async Task<global::Shared.Protos.BloqueoFechasResponse> BloquearFechas(
-        global::Shared.Protos.BloqueoFechasRequest request,
-        ServerCallContext context)
+    public override async Task<BloqueoFechasResponse> BloquearFechas(BloqueoFechasRequest request, ServerCallContext context)
     {
         try
         {
             if (!DateOnly.TryParse(request.FechaInicio, out var fechaInicio))
             {
-                return new global::Shared.Protos.BloqueoFechasResponse
+                return new BloqueoFechasResponse
                 {
                     Exito = false,
-                    Mensaje = $"FechaInicio invalida: {request.FechaInicio}"
+                    Mensaje = $"FechaInicio inválida: {request.FechaInicio}"
                 };
             }
 
             if (!DateOnly.TryParse(request.FechaFin, out var fechaFin))
             {
-                return new global::Shared.Protos.BloqueoFechasResponse
+                return new BloqueoFechasResponse
                 {
                     Exito = false,
-                    Mensaje = $"FechaFin invalida: {request.FechaFin}"
+                    Mensaje = $"FechaFin inválida: {request.FechaFin}"
                 };
             }
 
             if (fechaFin <= fechaInicio)
             {
-                return new global::Shared.Protos.BloqueoFechasResponse
+                return new BloqueoFechasResponse
                 {
                     Exito = false,
                     Mensaje = "La fecha de salida debe ser posterior a la fecha de entrada."
                 };
             }
 
+            // IMPORTANTE: NO aplicar AddDays(-1) aquí.
+            // CalendarioGateway ya envía la fechaFin correcta (sin restar días).
+            // BloquearFechasAsync internamente bloquea fechaInicio..fechaFin inclusive.
             await _calendarioService.BloquearFechasAsync(new Alojamientos.Business.DTOs.BloquearFechasRequest
             {
                 HabitacionId = request.HabitacionId,
                 FechaInicio = fechaInicio,
-                FechaFin = fechaFin.AddDays(-1)
+                FechaFin = fechaFin
             });
 
-            return new global::Shared.Protos.BloqueoFechasResponse
+            return new BloqueoFechasResponse
             {
                 Exito = true,
                 Mensaje = "Fechas bloqueadas correctamente."
@@ -108,8 +102,8 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al bloquear fechas por gRPC");
-            return new global::Shared.Protos.BloqueoFechasResponse
+            _logger.LogError(ex, "Error al bloquear fechas por gRPC para habitacion {HabitacionId}", request.HabitacionId);
+            return new BloqueoFechasResponse
             {
                 Exito = false,
                 Mensaje = ex.Message

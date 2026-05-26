@@ -85,4 +85,12 @@ public class CalendarioService : ICalendarioService
             throw;
         }
     }
+
+    public async Task<bool> VerificarDisponibilidadAsync(int habitacionId, DateOnly fechaInicio, DateOnly fechaFin)
+    {
+        // Usa directamente la consulta SQL optimizada en lugar de traer todo el mes
+        bool hayCruce = await _calendarioDataService.ExistsBloqueoOcupacionAsync(
+            habitacionId, fechaInicio, fechaFin);
+        return !hayCruce;
+    }
 }

@@ -81,7 +81,7 @@ public class CalendarioGateway : ICalendarioGateway
         {
             habitacionId,
             fechaInicio = fechaInicio.ToString("yyyy-MM-dd"),
-            fechaFin = fechaFin.AddDays(-1).ToString("yyyy-MM-dd")
+            fechaFin = fechaFin.ToString("yyyy-MM-dd")
         };
 
         var responseHttp = await _httpClient.PostAsJsonAsync("Calendario/bloquear", payload);
