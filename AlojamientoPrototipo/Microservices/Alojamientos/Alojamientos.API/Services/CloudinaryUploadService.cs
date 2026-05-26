@@ -29,7 +29,6 @@ public class CloudinaryUploadService : ICloudinaryUploadService
     public async Task<string> UploadImageFromUrlAsync(string sourceUrl, CancellationToken cancellationToken = default)
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-        var signature = BuildSignature(timestamp, _credentials.ApiSecret);
         var endpoint = $"https://api.cloudinary.com/v1_1/{_credentials.CloudName}/image/upload";
 
         using var content = new MultipartFormDataContent
@@ -37,7 +36,7 @@ public class CloudinaryUploadService : ICloudinaryUploadService
             { new StringContent(sourceUrl), "file" }
         };
 
-        AddCloudinaryAuthFields(content, timestamp, signature);
+        AddCloudinaryAuthFields(content, timestamp);
 
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
         var payload = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -64,7 +63,6 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         CancellationToken cancellationToken = default)
     {
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
-        var signature = BuildSignature(timestamp, _credentials.ApiSecret);
         var endpoint = $"https://api.cloudinary.com/v1_1/{_credentials.CloudName}/image/upload";
 
         using var fileContent = new StreamContent(stream);
@@ -76,7 +74,7 @@ public class CloudinaryUploadService : ICloudinaryUploadService
             { fileContent, "file", string.IsNullOrWhiteSpace(fileName) ? "upload.bin" : fileName }
         };
 
-        AddCloudinaryAuthFields(content, timestamp, signature);
+        AddCloudinaryAuthFields(content, timestamp);
 
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
         var payload = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -96,26 +94,39 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         return parsed.SecureUrl;
     }
 
-    private static string BuildSignature(string timestamp, string apiSecret)
+    private string BuildSignature(string timestamp)
     {
-        var toSign = $"timestamp={timestamp}{apiSecret}";
+        var parameters = new SortedDictionary<string, string>
+        {
+            ["timestamp"] = timestamp
+        };
+
+        if (!string.IsNullOrWhiteSpace(_uploadPreset))
+        {
+            parameters["upload_preset"] = _uploadPreset;
+        }
+
+        var toSign = string.Join("&", parameters.Select(parameter => $"{parameter.Key}={parameter.Value}"))
+            + _credentials.ApiSecret;
         var bytes = SHA1.HashData(Encoding.UTF8.GetBytes(toSign));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
-    private void AddCloudinaryAuthFields(MultipartFormDataContent content, string timestamp, string signature)
+    private void AddCloudinaryAuthFields(MultipartFormDataContent content, string timestamp)
     {
         if (!string.IsNullOrWhiteSpace(_uploadPreset))
         {
-            _logger.LogInformation("Cloudinary upload is using CLOUDINARY_UPLOAD_PRESET.");
+            _logger.LogInformation("Cloudinary upload is using signed CLOUDINARY_URL credentials with CLOUDINARY_UPLOAD_PRESET.");
             content.Add(new StringContent(_uploadPreset), "upload_preset");
-            return;
+        }
+        else
+        {
+            _logger.LogInformation("Cloudinary upload is using signed CLOUDINARY_URL credentials.");
         }
 
-        _logger.LogInformation("Cloudinary upload is using signed CLOUDINARY_URL credentials.");
         content.Add(new StringContent(_credentials.ApiKey), "api_key");
         content.Add(new StringContent(timestamp), "timestamp");
-        content.Add(new StringContent(signature), "signature");
+        content.Add(new StringContent(BuildSignature(timestamp)), "signature");
     }
 
     private static string? NormalizeOptionalEnvironmentValue(string? value)
