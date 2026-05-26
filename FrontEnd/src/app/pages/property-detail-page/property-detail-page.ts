@@ -29,6 +29,7 @@ export class PropertyDetailPageComponent {
   loadingProperty = true;
   loadingRooms = true;
   availabilityLoading = false;
+  availabilitySearched = false;
   bookingMessage = '';
   bookingError = '';
   bookingLoading = false;
@@ -69,6 +70,7 @@ export class PropertyDetailPageComponent {
       this.loadingProperty = true;
       this.loadingRooms = true;
       this.availabilityLoading = false;
+      this.availabilitySearched = false;
       this.bookingMessage = '';
       this.bookingError = '';
       this.selectedRoomId = null;
@@ -85,7 +87,7 @@ export class PropertyDetailPageComponent {
       this.alojamientosService.getRoomsByProperty(id).subscribe({
         next: (rooms) => {
           this.rooms = rooms;
-          this.selectedRoomId = rooms[0]?.habitacionId ?? null;
+          this.selectedRoomId = null;
           this.loadingRooms = false;
           this.cdr.detectChanges();
         },
@@ -103,6 +105,14 @@ export class PropertyDetailPageComponent {
     return precios.length ? Math.min(...precios) : null;
   }
 
+  get visibleRooms() {
+    if (!this.availabilitySearched) {
+      return [] as Habitacion[];
+    }
+
+    return this.rooms.filter((room) => !this.isRoomUnavailable(room));
+  }
+
   selectRoom(room: Habitacion) {
     if (this.isRoomUnavailable(room)) {
       return;
@@ -112,47 +122,35 @@ export class PropertyDetailPageComponent {
   }
 
   onDateRangeChange() {
-    const property = this.property;
-    if (!property) {
+    this.availabilitySearched = false;
+    this.selectedRoomId = null;
+    this.unavailableRoomIds = new Set<number>();
+    this.bookingMessage = '';
+    this.bookingError = '';
+    this.cdr.detectChanges();
+  }
+
+  searchAvailableRooms() {
+    if (!this.property) {
       return;
     }
 
     if (!this.bookingForm.fechaCheckIn || !this.bookingForm.fechaCheckOut) {
-      this.unavailableRoomIds = new Set<number>();
+      this.bookingError = 'Debes seleccionar fecha de ingreso y salida antes de buscar.';
       this.cdr.detectChanges();
       return;
     }
 
     const nights = this.calculateNights(this.bookingForm.fechaCheckIn, this.bookingForm.fechaCheckOut);
     if (nights <= 0) {
-      this.unavailableRoomIds = new Set<number>();
+      this.bookingError = 'La fecha de salida debe ser posterior a la fecha de ingreso.';
       this.cdr.detectChanges();
       return;
     }
 
-    this.availabilityLoading = true;
-
-    this.reservasService.getDetailedByAlojamiento(property.alojamientoId).subscribe({
-      next: (reservations) => {
-        this.reservationsByProperty = reservations;
-        this.unavailableRoomIds = this.getUnavailableRoomsForRange(
-          reservations,
-          this.bookingForm.fechaCheckIn,
-          this.bookingForm.fechaCheckOut,
-        );
-
-        if (this.selectedRoomId && this.unavailableRoomIds.has(this.selectedRoomId)) {
-          this.selectedRoomId = null;
-        }
-
-        this.availabilityLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.availabilityLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
+    this.bookingError = '';
+    this.bookingMessage = '';
+    this.refreshAvailabilityForSelectedRange();
   }
 
   reserveSelectedRoom() {
@@ -180,6 +178,11 @@ export class PropertyDetailPageComponent {
 
     if (this.isRoomUnavailable(room)) {
       this.bookingError = 'La habitacion seleccionada ya no esta disponible para esas fechas.';
+      return;
+    }
+
+    if (!this.availabilitySearched) {
+      this.bookingError = 'Busca primero las habitaciones disponibles para el rango seleccionado.';
       return;
     }
 
@@ -291,14 +294,15 @@ export class PropertyDetailPageComponent {
             next: (reservation) => {
               this.bookingLoading = false;
               this.bookingMessage = `Reserva creada con codigo ${reservation.codigoReserva ?? `#${reservation.reservaId}`}.`;
-              this.unavailableRoomIds = new Set([...this.unavailableRoomIds, room.habitacionId]);
               this.selectedRoomId = null;
+              this.refreshAvailabilityForSelectedRange();
               this.cdr.detectChanges();
               void this.router.navigateByUrl('/mis-reservas');
             },
             error: () => {
               this.bookingLoading = false;
               this.bookingError = 'No fue posible completar la reserva con el gateway.';
+              this.refreshAvailabilityForSelectedRange();
               this.cdr.detectChanges();
             },
           });
@@ -306,6 +310,44 @@ export class PropertyDetailPageComponent {
       error: () => {
         this.bookingLoading = false;
         this.bookingError = 'No fue posible verificar la disponibilidad actual de la habitacion.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private refreshAvailabilityForSelectedRange() {
+    const property = this.property;
+    if (!property || !this.bookingForm.fechaCheckIn || !this.bookingForm.fechaCheckOut) {
+      return;
+    }
+
+    this.availabilityLoading = true;
+
+    this.reservasService.getDetailedByAlojamiento(property.alojamientoId).subscribe({
+      next: (reservations) => {
+        this.reservationsByProperty = reservations;
+        this.unavailableRoomIds = this.getUnavailableRoomsForRange(
+          reservations,
+          this.bookingForm.fechaCheckIn,
+          this.bookingForm.fechaCheckOut,
+        );
+
+        if (this.selectedRoomId && this.unavailableRoomIds.has(this.selectedRoomId)) {
+          this.selectedRoomId = null;
+        }
+
+        this.availabilitySearched = true;
+        const availableRooms = this.rooms.filter((room) => !this.unavailableRoomIds.has(room.habitacionId));
+        if (!this.selectedRoomId) {
+          this.selectedRoomId = availableRooms[0]?.habitacionId ?? null;
+        }
+
+        this.availabilityLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.availabilityLoading = false;
+        this.availabilitySearched = false;
         this.cdr.detectChanges();
       },
     });

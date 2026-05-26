@@ -28,9 +28,13 @@
       <input [(ngModel)]="bookingForm.fechaCheckOut" (ngModelChange)="onDateRangeChange()" type="date" name="fechaCheckOut" />
     </label>
 
+    <button type="button" class="search-rooms-btn" (click)="searchAvailableRooms()" [disabled]="availabilityLoading">
+      {{ availabilityLoading ? 'Buscando...' : 'Buscar habitaciones disponibles' }}
+    </button>
+
     <p *ngIf="availabilityLoading" class="availability-hint">Verificando disponibilidad de habitaciones...</p>
-    <p *ngIf="!availabilityLoading && bookingForm.fechaCheckIn && bookingForm.fechaCheckOut" class="availability-hint">
-      Las habitaciones marcadas como no disponibles ya estan reservadas para ese rango de fechas.
+    <p *ngIf="!availabilityLoading && availabilitySearched && visibleRooms.length" class="availability-hint">
+      Se muestran solo las habitaciones disponibles para ese rango de fechas.
     </p>
 
     <div class="booking-grid">
@@ -78,7 +82,7 @@
     <p *ngIf="bookingError" class="booking-error">{{ bookingError }}</p>
     <p *ngIf="bookingMessage" class="booking-success">{{ bookingMessage }}</p>
 
-    <button type="button" (click)="reserveSelectedRoom()" [disabled]="bookingLoading || !rooms.length">
+    <button type="button" (click)="reserveSelectedRoom()" [disabled]="bookingLoading || !visibleRooms.length || !availabilitySearched">
       {{ bookingLoading ? 'Reservando...' : 'Reservar habitacion seleccionada' }}
     </button>
   </aside>
@@ -90,9 +94,15 @@
   <h2>Habitaciones o unidades</h2>
   <p *ngIf="loadingRooms">Cargando habitaciones...</p>
   <p *ngIf="!loadingRooms && !rooms.length">No hay habitaciones registradas para este alojamiento todavia.</p>
+  <p *ngIf="!loadingRooms && rooms.length && !availabilitySearched">
+    Selecciona fechas y pulsa <strong>Buscar habitaciones disponibles</strong> para ver opciones reservables.
+  </p>
+  <p *ngIf="!loadingRooms && availabilitySearched && !visibleRooms.length">
+    No hay habitaciones disponibles para ese rango de fechas.
+  </p>
   <article
     class="room-card"
-    *ngFor="let room of rooms"
+    *ngFor="let room of visibleRooms"
     [class.selected]="selectedRoomId === room.habitacionId"
     [class.unavailable]="isRoomUnavailable(room)"
     (click)="selectRoom(room)">
