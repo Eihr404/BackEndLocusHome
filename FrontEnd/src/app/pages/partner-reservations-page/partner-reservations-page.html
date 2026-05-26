@@ -11,11 +11,22 @@
       <strong>{{ reservation.alojamientoNombre }}</strong>
       <p>{{ reservation.clienteNombre }}</p>
       <small>{{ reservation.fechaEntrada }} a {{ reservation.fechaSalida }}</small>
+      <small *ngIf="invoiceByReservationId[reservation.reservaId]?.existe">
+        Metodo: {{ invoiceByReservationId[reservation.reservaId].metodoPagoTipo || 'No especificado' }}
+      </small>
     </div>
     <div class="status-block">
       <small>{{ reservation.codigoReserva }}</small>
       <span>{{ reservation.estado }}</span>
       <strong>${{ reservation.total }} {{ reservation.moneda }}</strong>
+      <button
+        *ngIf="canConfirmCashReservation(reservation)"
+        type="button"
+        class="confirm-btn"
+        (click)="confirmCashReservation(reservation)"
+        [disabled]="confirmingReservationId === reservation.reservaId">
+        {{ confirmingReservationId === reservation.reservaId ? 'Confirmando...' : 'Confirmar' }}
+      </button>
     </div>
   </article>
 </section>

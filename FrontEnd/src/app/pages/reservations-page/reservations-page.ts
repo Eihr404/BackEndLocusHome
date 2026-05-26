@@ -60,13 +60,63 @@ export class ReservationsPageComponent {
 
   canPay(reservation: ReservaResumen) {
     const status = reservation.estado.trim().toLowerCase();
-    return status !== 'pagado' && status !== 'confirmada' && status !== 'confirmado';
+    return (
+      status !== 'pagado' &&
+      status !== 'confirmada' &&
+      status !== 'confirmado' &&
+      status !== 'pendiente de confirmacion'
+    );
   }
 
   submitPayment(reservation: ReservaResumen) {
     this.paymentMessage = '';
     this.paymentError = '';
     this.paymentLoadingReservationId = reservation.reservaId;
+    const selectedMethod =
+      this.paymentMethods.find((method) => method.metodoPagoId === this.paymentForm.metodoPagoId) ?? null;
+    const isCashPayment = selectedMethod?.tipo?.trim().toLowerCase() === 'efectivo';
+
+    if (isCashPayment) {
+      this.reservasService
+        .updateReservationStatus(reservation.reservaId, 'Pendiente de confirmacion')
+        .pipe(
+          switchMap(() =>
+            forkJoin({
+              reservations: this.getReservationsRequest(),
+            }),
+          ),
+        )
+        .subscribe({
+          next: ({ reservations }) => {
+            this.invoiceByReservationId[reservation.reservaId] = {
+              facturaId: 0,
+              reservaId: reservation.reservaId,
+              estado: 'Pendiente',
+              montoTotal: reservation.total,
+              moneda: reservation.moneda,
+              existe: false,
+              metodoPagoId: selectedMethod?.metodoPagoId ?? null,
+              metodoPagoTipo: selectedMethod?.tipo ?? selectedMethod?.nombre ?? 'Efectivo',
+              fechaPago: this.paymentForm.fechaPago ? `${this.paymentForm.fechaPago}T00:00:00` : null,
+            };
+            this.reservations = reservations.map((item) =>
+              item.reservaId === reservation.reservaId
+                ? { ...item, estado: 'Pendiente de confirmacion' }
+                : item,
+            );
+            this.paymentLoadingReservationId = null;
+            this.paymentMessage = 'Pago en efectivo registrado. Queda pendiente la confirmacion del socio.';
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.paymentLoadingReservationId = null;
+            this.paymentError = 'No fue posible registrar el pago en efectivo.';
+            this.cdr.detectChanges();
+          },
+        });
+
+      return;
+    }
 
     this.facturacionService
       .getSummaryByReserva(reservation.reservaId)
@@ -99,7 +149,7 @@ export class ReservationsPageComponent {
             ),
             switchMap(() =>
               forkJoin({
-                invoice: this.facturacionService.getSummaryByReserva(reservation.reservaId),
+                invoice: this.facturacionService.getInvoiceByReserva(reservation.reservaId),
                 reservations: this.getReservationsRequest(),
               }),
             ),

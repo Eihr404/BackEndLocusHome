@@ -59,4 +59,35 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
             };
         }
     }
+
+    public override async Task<BloqueoFechasResponse> BloquearFechas(BloqueoFechasRequest request, ServerCallContext context)
+    {
+        try
+        {
+            var fechaInicio = DateOnly.Parse(request.FechaInicio);
+            var fechaFin = DateOnly.Parse(request.FechaFin);
+
+            await _calendarioService.BloquearFechasAsync(new Alojamientos.Business.DTOs.BloquearFechasRequest
+            {
+                HabitacionId = request.HabitacionId,
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin.AddDays(-1)
+            });
+
+            return new BloqueoFechasResponse
+            {
+                Exito = true,
+                Mensaje = "Fechas bloqueadas correctamente."
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al bloquear fechas por gRPC");
+            return new BloqueoFechasResponse
+            {
+                Exito = false,
+                Mensaje = ex.Message
+            };
+        }
+    }
 }

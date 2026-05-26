@@ -5,6 +5,9 @@ export interface FacturaResumen {
   montoTotal: number;
   moneda: string;
   existe?: boolean;
+  metodoPagoId?: number | null;
+  metodoPagoTipo?: string | null;
+  fechaPago?: string | null;
 }
 
 export interface MetodoPago {

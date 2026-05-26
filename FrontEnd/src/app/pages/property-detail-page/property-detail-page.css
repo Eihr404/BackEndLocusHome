@@ -102,6 +102,11 @@
   border-radius: 0.9rem;
 }
 
+.availability-hint {
+  margin: 0;
+  color: #6d5b48;
+}
+
 .client-profile-box {
   display: grid;
   gap: 0.7rem;
@@ -145,6 +150,13 @@
   background: #ece4d2;
 }
 
+.room-card.unavailable {
+  opacity: 0.7;
+  background: #efe7df;
+  border-color: rgba(125, 45, 32, 0.18);
+  cursor: not-allowed;
+}
+
 .room-card p {
   margin: 0.35rem 0 0;
 }
@@ -164,6 +176,11 @@
   color: #fff;
   font: inherit;
   cursor: pointer;
+}
+
+.select-room-btn:disabled {
+  background: #9a8d80;
+  cursor: not-allowed;
 }
 
 @media (max-width: 840px) {

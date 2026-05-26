@@ -35,3 +35,22 @@ export interface ReservaCreada {
   total: number;
   moneda: string;
 }
+
+export interface ReservaDetalleHabitacion {
+  detalleId: number;
+  habitacionId: number;
+  precioPorNoche: number;
+  numNoches: number;
+  subTotalHabitacion: number;
+}
+
+export interface ReservaAlojamientoDetalle {
+  reservaId: number;
+  clienteId: number;
+  alojamientoId: number;
+  fechaCheckIn: string;
+  fechaCheckOut: string;
+  estado: string;
+  codigoReserva?: string;
+  detallesHabitacion: ReservaDetalleHabitacion[];
+}

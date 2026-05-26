@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { map, of } from 'rxjs';
+import { map } from 'rxjs';
 
 import { CrearFacturaRequest, FacturaResumen, MetodoPago } from '../models/factura.model';
 import { FACTURACION_API_BASE_URL } from './api.config';
@@ -12,6 +12,12 @@ export class FacturacionService {
   getSummaryByReserva(reservaId: number) {
     return this.http
       .get<unknown>(`${FACTURACION_API_BASE_URL}/Facturas/resumen/reserva/${reservaId}`)
+      .pipe(map((response) => this.normalizeSummary(this.unwrapItem(response), reservaId)));
+  }
+
+  getInvoiceByReserva(reservaId: number) {
+    return this.http
+      .get<unknown>(`${FACTURACION_API_BASE_URL}/Facturas/reserva/${reservaId}`)
       .pipe(map((response) => this.normalizeSummary(this.unwrapItem(response), reservaId)));
   }
 
@@ -85,8 +91,13 @@ export class FacturacionService {
         montoTotal: 0,
         moneda: 'USD',
         existe: false,
+        metodoPagoId: null,
+        metodoPagoTipo: null,
+        fechaPago: null,
       };
     }
+
+    const metodoPago = item.metodoPago ?? item.MetodoPago ?? item.tipoMetodoPago ?? item.TipoMetodoPago ?? item.tipo ?? item.Tipo ?? null;
 
     return {
       facturaId: item.facturaId ?? item.FacturaId ?? 0,
@@ -95,6 +106,15 @@ export class FacturacionService {
       montoTotal: Number(item.montoTotal ?? item.MontoTotal ?? item.total ?? item.Total ?? 0) || 0,
       moneda: item.moneda ?? item.Moneda ?? 'USD',
       existe: true,
+      metodoPagoId: item.metodoPagoId ?? item.MetodoPagoId ?? null,
+      metodoPagoTipo:
+        metodoPago?.tipo ??
+        metodoPago?.Tipo ??
+        metodoPago?.nombre ??
+        metodoPago?.Nombre ??
+        metodoPago ??
+        null,
+      fechaPago: item.fechaPago ?? item.FechaPago ?? null,
     };
   }
 

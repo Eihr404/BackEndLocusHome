@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AlojamientoCard, Habitacion } from '../../models/alojamiento.model';
+import { ReservaAlojamientoDetalle } from '../../models/reserva.model';
 import { AuthService } from '../../services/auth.service';
 import { AlojamientosService } from '../../services/alojamientos.service';
 import { ReservasService } from '../../services/reservas.service';
@@ -24,13 +25,16 @@ export class PropertyDetailPageComponent {
 
   property: AlojamientoCard | null = null;
   rooms: Habitacion[] = [];
+  reservationsByProperty: ReservaAlojamientoDetalle[] = [];
   loadingProperty = true;
   loadingRooms = true;
+  availabilityLoading = false;
   bookingMessage = '';
   bookingError = '';
   bookingLoading = false;
   selectedRoomId: number | null = null;
   showClientProfileFields = false;
+  unavailableRoomIds = new Set<number>();
 
   bookingForm = {
     fechaCheckIn: '',
@@ -40,6 +44,7 @@ export class PropertyDetailPageComponent {
     llevaMascotas: false,
     codigoDescuento: '',
   };
+
   clientProfileForm = {
     cedula: '',
     telefono: '',
@@ -52,18 +57,24 @@ export class PropertyDetailPageComponent {
       if (!id) {
         this.property = null;
         this.rooms = [];
+        this.reservationsByProperty = [];
         this.loadingProperty = false;
         this.loadingRooms = false;
+        this.availabilityLoading = false;
+        this.unavailableRoomIds = new Set<number>();
         this.cdr.detectChanges();
         return;
       }
 
       this.loadingProperty = true;
       this.loadingRooms = true;
+      this.availabilityLoading = false;
       this.bookingMessage = '';
       this.bookingError = '';
       this.selectedRoomId = null;
       this.showClientProfileFields = false;
+      this.unavailableRoomIds = new Set<number>();
+      this.reservationsByProperty = [];
 
       this.alojamientosService.getById(id).subscribe((property) => {
         this.property = property;
@@ -88,12 +99,60 @@ export class PropertyDetailPageComponent {
 
   get precioMinimo(): number | null {
     if (!this.rooms.length) return null;
-    const precios = this.rooms.map(r => r.precioNoche).filter(p => p > 0);
+    const precios = this.rooms.map((room) => room.precioNoche).filter((price) => price > 0);
     return precios.length ? Math.min(...precios) : null;
   }
 
   selectRoom(room: Habitacion) {
+    if (this.isRoomUnavailable(room)) {
+      return;
+    }
+
     this.selectedRoomId = room.habitacionId;
+  }
+
+  onDateRangeChange() {
+    const property = this.property;
+    if (!property) {
+      return;
+    }
+
+    if (!this.bookingForm.fechaCheckIn || !this.bookingForm.fechaCheckOut) {
+      this.unavailableRoomIds = new Set<number>();
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const nights = this.calculateNights(this.bookingForm.fechaCheckIn, this.bookingForm.fechaCheckOut);
+    if (nights <= 0) {
+      this.unavailableRoomIds = new Set<number>();
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.availabilityLoading = true;
+
+    this.reservasService.getDetailedByAlojamiento(property.alojamientoId).subscribe({
+      next: (reservations) => {
+        this.reservationsByProperty = reservations;
+        this.unavailableRoomIds = this.getUnavailableRoomsForRange(
+          reservations,
+          this.bookingForm.fechaCheckIn,
+          this.bookingForm.fechaCheckOut,
+        );
+
+        if (this.selectedRoomId && this.unavailableRoomIds.has(this.selectedRoomId)) {
+          this.selectedRoomId = null;
+        }
+
+        this.availabilityLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.availabilityLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   reserveSelectedRoom() {
@@ -116,6 +175,11 @@ export class PropertyDetailPageComponent {
 
     if (!property || !room) {
       this.bookingError = 'Selecciona una habitacion disponible antes de reservar.';
+      return;
+    }
+
+    if (this.isRoomUnavailable(room)) {
+      this.bookingError = 'La habitacion seleccionada ya no esta disponible para esas fechas.';
       return;
     }
 
@@ -163,6 +227,10 @@ export class PropertyDetailPageComponent {
     this.submitReservation(session.clienteId, property.alojamientoId, room, nights);
   }
 
+  isRoomUnavailable(room: Habitacion) {
+    return this.unavailableRoomIds.has(room.habitacionId);
+  }
+
   private calculateNights(checkIn: string, checkOut: string) {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
@@ -184,36 +252,92 @@ export class PropertyDetailPageComponent {
       return;
     }
 
-    this.reservasService
-      .createReservation({
-        clienteId,
-        alojamientoId,
-        fechaCheckIn: this.bookingForm.fechaCheckIn,
-        fechaCheckOut: this.bookingForm.fechaCheckOut,
-        numAdultos: this.bookingForm.numAdultos,
-        numNinos: this.bookingForm.numNinos,
-        llevaMascotas: this.bookingForm.llevaMascotas,
-        codigoDescuento: this.bookingForm.codigoDescuento || '',
-        habitaciones: [
-          {
-            habitacionId: room.habitacionId,
-            precioPorNoche: room.precioNoche,
-            numNoches: nights,
-          },
-        ],
-      })
-      .subscribe({
-        next: (reservation) => {
+    this.reservasService.getDetailedByAlojamiento(alojamientoId).subscribe({
+      next: (reservations) => {
+        this.reservationsByProperty = reservations;
+        this.unavailableRoomIds = this.getUnavailableRoomsForRange(
+          reservations,
+          this.bookingForm.fechaCheckIn,
+          this.bookingForm.fechaCheckOut,
+        );
+
+        if (this.unavailableRoomIds.has(room.habitacionId)) {
           this.bookingLoading = false;
-          this.bookingMessage = `Reserva creada con codigo ${reservation.codigoReserva ?? `#${reservation.reservaId}`}.`;
+          this.selectedRoomId = null;
+          this.bookingError = 'La habitacion ya fue reservada para esas fechas. Elige otra disponible.';
           this.cdr.detectChanges();
-          void this.router.navigateByUrl('/mis-reservas');
-        },
-        error: () => {
-          this.bookingLoading = false;
-          this.bookingError = 'No fue posible completar la reserva con el gateway.';
-          this.cdr.detectChanges();
-        },
-      });
+          return;
+        }
+
+        this.reservasService
+          .createReservation({
+            clienteId,
+            alojamientoId,
+            fechaCheckIn: this.bookingForm.fechaCheckIn,
+            fechaCheckOut: this.bookingForm.fechaCheckOut,
+            numAdultos: this.bookingForm.numAdultos,
+            numNinos: this.bookingForm.numNinos,
+            llevaMascotas: this.bookingForm.llevaMascotas,
+            codigoDescuento: this.bookingForm.codigoDescuento || '',
+            habitaciones: [
+              {
+                habitacionId: room.habitacionId,
+                precioPorNoche: room.precioNoche,
+                numNoches: nights,
+              },
+            ],
+          })
+          .subscribe({
+            next: (reservation) => {
+              this.bookingLoading = false;
+              this.bookingMessage = `Reserva creada con codigo ${reservation.codigoReserva ?? `#${reservation.reservaId}`}.`;
+              this.unavailableRoomIds = new Set([...this.unavailableRoomIds, room.habitacionId]);
+              this.selectedRoomId = null;
+              this.cdr.detectChanges();
+              void this.router.navigateByUrl('/mis-reservas');
+            },
+            error: () => {
+              this.bookingLoading = false;
+              this.bookingError = 'No fue posible completar la reserva con el gateway.';
+              this.cdr.detectChanges();
+            },
+          });
+      },
+      error: () => {
+        this.bookingLoading = false;
+        this.bookingError = 'No fue posible verificar la disponibilidad actual de la habitacion.';
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private getUnavailableRoomsForRange(
+    reservations: ReservaAlojamientoDetalle[],
+    checkIn: string,
+    checkOut: string,
+  ) {
+    const selectedStart = new Date(checkIn);
+    const selectedEnd = new Date(checkOut);
+    const blockedStates = new Set(['pendiente', 'pendiente de confirmacion', 'confirmada', 'confirmado', 'pagado']);
+    const roomIds = new Set<number>();
+
+    reservations.forEach((reservation) => {
+      const status = reservation.estado.trim().toLowerCase();
+      if (!blockedStates.has(status)) {
+        return;
+      }
+
+      const reservationStart = new Date(reservation.fechaCheckIn);
+      const reservationEnd = new Date(reservation.fechaCheckOut);
+      const overlaps = selectedStart < reservationEnd && selectedEnd > reservationStart;
+
+      if (!overlaps) {
+        return;
+      }
+
+      reservation.detallesHabitacion.forEach((detail: { habitacionId: number }) => roomIds.add(detail.habitacionId));
+    });
+
+    return roomIds;
   }
 }

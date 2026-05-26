@@ -20,13 +20,18 @@
 
     <label>
       Check-in
-      <input [(ngModel)]="bookingForm.fechaCheckIn" type="date" name="fechaCheckIn" />
+      <input [(ngModel)]="bookingForm.fechaCheckIn" (ngModelChange)="onDateRangeChange()" type="date" name="fechaCheckIn" />
     </label>
 
     <label>
       Check-out
-      <input [(ngModel)]="bookingForm.fechaCheckOut" type="date" name="fechaCheckOut" />
+      <input [(ngModel)]="bookingForm.fechaCheckOut" (ngModelChange)="onDateRangeChange()" type="date" name="fechaCheckOut" />
     </label>
+
+    <p *ngIf="availabilityLoading" class="availability-hint">Verificando disponibilidad de habitaciones...</p>
+    <p *ngIf="!availabilityLoading && bookingForm.fechaCheckIn && bookingForm.fechaCheckOut" class="availability-hint">
+      Las habitaciones marcadas como no disponibles ya estan reservadas para ese rango de fechas.
+    </p>
 
     <div class="booking-grid">
       <label>
@@ -89,6 +94,7 @@
     class="room-card"
     *ngFor="let room of rooms"
     [class.selected]="selectedRoomId === room.habitacionId"
+    [class.unavailable]="isRoomUnavailable(room)"
     (click)="selectRoom(room)">
     <div>
       <strong>{{ room.nombre }}</strong>
@@ -97,10 +103,14 @@
       <small *ngIf="room.numDormitorios">Dormitorios: {{ room.numDormitorios }}</small>
     </div>
     <div class="room-meta">
-      <span>{{ room.estado || 'Disponible' }}</span>
+      <span>{{ isRoomUnavailable(room) ? 'No disponible' : (room.estado || 'Disponible') }}</span>
       <strong>${{ room.precioNoche }}</strong>
-      <button type="button" class="select-room-btn" (click)="selectRoom(room); $event.stopPropagation()">
-        {{ selectedRoomId === room.habitacionId ? 'Seleccionada' : 'Elegir' }}
+      <button
+        type="button"
+        class="select-room-btn"
+        [disabled]="isRoomUnavailable(room)"
+        (click)="selectRoom(room); $event.stopPropagation()">
+        {{ isRoomUnavailable(room) ? 'Ocupada' : (selectedRoomId === room.habitacionId ? 'Seleccionada' : 'Elegir') }}
       </button>
     </div>
   </article>

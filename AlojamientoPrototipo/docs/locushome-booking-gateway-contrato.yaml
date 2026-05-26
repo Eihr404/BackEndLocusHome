@@ -1,0 +1,997 @@
+openapi: 3.0.3
+info:
+  title: LocusHome - Contrato de Integración de API Gateway para Booking
+  description: |
+    API pública unificada expuesta a través de YARP API Gateway para la integración con Booking.
+    Todas las solicitudes se enrutan a través del Gateway central de LocusHome, aplicando mapeos de rutas específicos y redirigiéndolas al microservicio correspondiente.
+
+    Prefijo público del proyecto:
+    `/api/v1/israel-hernandez`
+
+    Mapeos principales del Gateway:
+    - `/api/v1/israel-hernandez/alojamientos` -> `Alojamientos.API` en `/api/v1/alojamientos`
+    - `/api/v1/israel-hernandez/calendario` -> `Alojamientos.API` en `/api/v1/calendario`
+    - `/api/v1/israel-hernandez/booking` -> `Reservas.API` en `/api/v1/reservas`
+
+    Nota:
+    El endpoint de creación de reservas usa validación de disponibilidad mediante gRPC/gRPC-Web con Alojamientos.API.
+    Si la integración gRPC aún está pendiente, el contrato se mantiene como especificación del comportamiento esperado.
+  version: 1.0.0
+
+servers:
+  - url: https://israel-apigateway.onrender.com
+    description: Servidor de Producción - YARP Gateway en Render
+  - url: http://localhost:5010
+    description: Gateway en Desarrollo Local
+
+tags:
+  - name: Alojamientos
+    description: Operaciones de catálogo de alojamientos redirigidas a Alojamientos.API.
+  - name: Habitaciones
+    description: Operaciones de habitaciones asociadas a alojamientos redirigidas a Alojamientos.API.
+  - name: Calendario
+    description: Consulta y gestión de disponibilidad de habitaciones redirigidas a Alojamientos.API.
+  - name: Reservas (Booking)
+    description: Creación, consulta y gestión de reservas redirigidas a Reservas.API.
+
+paths:
+
+  # ════════════════════════════════════════
+  # MÓDULO 1: ALOJAMIENTOS
+  # Ruta Gateway: /api/v1/israel-hernandez/alojamientos
+  # Ruta interna: /api/v1/alojamientos
+  # ════════════════════════════════════════
+
+  /api/v1/israel-hernandez/alojamientos:
+    get:
+      tags: [Alojamientos]
+      summary: Obtener todos los alojamientos
+      description: |
+        Retorna la lista completa de alojamientos registrados en el sistema.
+        Redirigido internamente por el Gateway a: `GET /api/v1/alojamientos`.
+      operationId: GetAllAlojamientos
+      responses:
+        '200':
+          description: Lista de alojamientos obtenida con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlojamientoResponse'
+              example:
+                - alojamientoId: 3
+                  socioId: 1
+                  tipoAlojamientoId: 1
+                  tipoAlojamientoNombre: ""
+                  nombre: "Hostal Israel"
+                  ciudad: "Quito"
+                  direccion: "Av. Amazonas y Naciones Unidas"
+                  descripcion: "Alojamiento cómodo ubicado en una zona céntrica."
+                  estrellas: null
+                  calificacionPromedio: 0.00
+                  totalResenas: 0
+                  admiteMascotas: true
+                  tienePiscina: false
+                  tieneParqueadero: true
+                  estado: "Pendiente"
+                  fechaCreacion: "2026-05-21T00:06:12.875059"
+
+    post:
+      tags: [Alojamientos]
+      summary: Registrar un nuevo alojamiento
+      description: |
+        Registra un nuevo alojamiento en el catálogo general.
+        Redirigido internamente por el Gateway a: `POST /api/v1/alojamientos`.
+      operationId: CrearAlojamiento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearAlojamientoRequest'
+            example:
+              socioId: 1
+              tipoAlojamientoId: 1
+              nombre: "Hostal Israel"
+              ciudad: "Quito"
+              direccion: "Av. Amazonas y Naciones Unidas"
+              descripcion: "Alojamiento cómodo ubicado en una zona céntrica."
+              admiteMascotas: true
+              tienePiscina: false
+              tieneParqueadero: true
+      responses:
+        '201':
+          description: Alojamiento creado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlojamientoResponse'
+        '400':
+          description: Solicitud inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/israel-hernandez/alojamientos/{id}:
+    get:
+      tags: [Alojamientos]
+      summary: Obtener detalle de alojamiento por ID
+      description: |
+        Recupera el detalle completo de un alojamiento específico.
+        Redirigido internamente por el Gateway a: `GET /api/v1/alojamientos/{id}`.
+      operationId: GetAlojamientoById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del alojamiento
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '200':
+          description: Alojamiento encontrado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlojamientoResponse'
+        '404':
+          description: Alojamiento no encontrado
+
+    put:
+      tags: [Alojamientos]
+      summary: Actualizar un alojamiento existente
+      description: |
+        Modifica los datos de un alojamiento por su ID.
+        Redirigido internamente por el Gateway a: `PUT /api/v1/alojamientos/{id}`.
+      operationId: ActualizarAlojamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del alojamiento a actualizar
+          schema:
+            type: integer
+            example: 3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarAlojamientoRequest'
+      responses:
+        '204':
+          description: Alojamiento actualizado correctamente
+        '400':
+          description: Solicitud inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Alojamiento no encontrado
+
+    delete:
+      tags: [Alojamientos]
+      summary: Eliminar un alojamiento
+      description: |
+        Elimina un alojamiento por su ID.
+        Redirigido internamente por el Gateway a: `DELETE /api/v1/alojamientos/{id}`.
+      operationId: EliminarAlojamiento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único del alojamiento a eliminar
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '204':
+          description: Alojamiento eliminado correctamente
+        '404':
+          description: Alojamiento no encontrado
+
+  # ════════════════════════════════════════
+  # MÓDULO 2: HABITACIONES
+  # Estas rutas se documentan bajo el prefijo público de Alojamientos.
+  # Si el Gateway no tiene una ruta específica para habitaciones,
+  # se recomienda exponerlas bajo alojamientos/{id}/habitaciones
+  # o añadir una ruta YARP para /habitaciones.
+  # ════════════════════════════════════════
+
+  /api/v1/israel-hernandez/alojamientos/{alojamientoId}/habitaciones:
+    get:
+      tags: [Habitaciones]
+      summary: Obtener habitaciones de un alojamiento
+      description: |
+        Lista las habitaciones asociadas a un alojamiento.
+        Ruta pública sugerida para integración externa.
+      operationId: GetHabitacionesByAlojamiento
+      parameters:
+        - name: alojamientoId
+          in: path
+          required: true
+          description: ID del alojamiento
+          schema:
+            type: integer
+            example: 3
+      responses:
+        '200':
+          description: Lista de habitaciones obtenida con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HabitacionResponse'
+
+    post:
+      tags: [Habitaciones]
+      summary: Crear una habitación para un alojamiento
+      description: |
+        Registra una habitación asociada a un alojamiento.
+        En producción, esta operación normalmente se usa desde administración interna.
+      operationId: CrearHabitacion
+      parameters:
+        - name: alojamientoId
+          in: path
+          required: true
+          description: ID del alojamiento
+          schema:
+            type: integer
+            example: 3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearHabitacionRequest'
+            example:
+              alojamientoId: 3
+              nombre: "Habitación Matrimonial"
+              descripcion: "Habitación cómoda para dos adultos, con baño privado y servicios básicos."
+              capacidadAdultos: 2
+              capacidadNinos: 0
+              numBanos: 1
+              numDormitorios: 1
+              tieneCocina: false
+              tieneAireAcondicionado: true
+              superficieM2: 25
+              precioNoche: 35
+      responses:
+        '201':
+          description: Habitación creada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitacionResponse'
+
+  # ════════════════════════════════════════
+  # MÓDULO 3: CALENDARIO Y DISPONIBILIDAD
+  # Ruta Gateway: /api/v1/israel-hernandez/calendario
+  # Ruta interna: /api/v1/calendario
+  # ════════════════════════════════════════
+
+  /api/v1/israel-hernandez/calendario/habitacion/{habitacionId}:
+    get:
+      tags: [Calendario]
+      summary: Obtener disponibilidad mensual de una habitación
+      description: |
+        Lista el estado día por día de disponibilidad para un mes y año dados en una habitación.
+        Redirigido internamente por el Gateway a: `GET /api/v1/calendario/habitacion/{habitacionId}`.
+      operationId: GetDisponibilidadMensual
+      parameters:
+        - name: habitacionId
+          in: path
+          required: true
+          description: ID único de la habitación a consultar
+          schema:
+            type: integer
+            example: 1
+        - name: mes
+          in: query
+          required: true
+          description: Número de mes, de 1 a 12
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            example: 5
+        - name: anio
+          in: query
+          required: true
+          description: Año de consulta
+          schema:
+            type: integer
+            minimum: 2020
+            example: 2026
+      responses:
+        '200':
+          description: Disponibilidad mensual obtenida con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarioResponse'
+
+  /api/v1/israel-hernandez/calendario/bloquear:
+    post:
+      tags: [Calendario]
+      summary: Bloquear rango de fechas en el calendario
+      description: |
+        Bloquea de forma manual o administrativa un rango de fechas en la disponibilidad de una habitación.
+        Redirigido internamente por el Gateway a: `POST /api/v1/calendario/bloquear`.
+      operationId: BloquearFechas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BloquearFechasRequest'
+            example:
+              habitacionId: 1
+              fechaInicio: "2026-05-22"
+              fechaFin: "2026-05-24"
+      responses:
+        '200':
+          description: Rango bloqueado exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarioResponse'
+
+  # ════════════════════════════════════════
+  # MÓDULO 4: RESERVAS / BOOKING
+  # Ruta Gateway: /api/v1/israel-hernandez/booking
+  # Ruta interna: /api/v1/reservas
+  # ════════════════════════════════════════
+
+  /api/v1/israel-hernandez/booking:
+    post:
+      tags: [Reservas (Booking)]
+      summary: Crear una nueva reserva
+      description: |
+        Inicia y procesa la creación de una reserva.
+        Valida internamente la disponibilidad con Alojamientos.API mediante gRPC/gRPC-Web.
+        Redirigido internamente por el Gateway a: `POST /api/v1/reservas`.
+      operationId: CrearReserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearReservaRequest'
+            example:
+              clienteId: 1
+              alojamientoId: 3
+              fechaCheckIn: "2026-05-22"
+              fechaCheckOut: "2026-05-24"
+              numAdultos: 2
+              numNinos: 0
+              llevaMascotas: true
+              codigoDescuento: ""
+              habitaciones:
+                - habitacionId: 1
+                  precioPorNoche: 35
+                  numNoches: 2
+      responses:
+        '201':
+          description: Reserva creada con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaResponse'
+        '400':
+          description: Error de validación de negocio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor, por ejemplo fallo en validación gRPC
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/israel-hernandez/booking/{id}:
+    get:
+      tags: [Reservas (Booking)]
+      summary: Consultar reserva por ID
+      description: |
+        Devuelve el detalle completo de una reserva específica.
+        Redirigido internamente por el Gateway a: `GET /api/v1/reservas/{id}`.
+      operationId: GetReservaById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único de la reserva
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Reserva obtenida con éxito
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservaResponse'
+        '404':
+          description: Reserva no encontrada
+
+  /api/v1/israel-hernandez/booking/cliente/{clienteId}:
+    get:
+      tags: [Reservas (Booking)]
+      summary: Consultar reservas de un cliente
+      description: |
+        Lista el historial de reservas de un cliente.
+        Redirigido internamente por el Gateway a: `GET /api/v1/reservas/cliente/{clienteId}`.
+      operationId: GetReservasByClienteId
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          description: ID del cliente
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Listado obtenido con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservaResponse'
+
+  /api/v1/israel-hernandez/booking/resumen/cliente/{clienteId}:
+    get:
+      tags: [Reservas (Booking)]
+      summary: Obtener resumen de reservas de un cliente
+      description: |
+        Retorna las reservas en un formato liviano, útil para listados.
+        Redirigido internamente por el Gateway a: `GET /api/v1/reservas/resumen/cliente/{clienteId}`.
+      operationId: GetResumenReservasByClienteId
+      parameters:
+        - name: clienteId
+          in: path
+          required: true
+          description: ID del cliente
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Resumen obtenido con éxito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservaResumenResponse'
+
+  /api/v1/israel-hernandez/booking/{id}/estado:
+    patch:
+      tags: [Reservas (Booking)]
+      summary: Actualizar estado de una reserva
+      description: |
+        Cambia el estado de una reserva, por ejemplo: Pendiente, Confirmada, Cancelada o Completada.
+        Redirigido internamente por el Gateway a: `PATCH /api/v1/reservas/{id}/estado`.
+      operationId: ActualizarEstadoReserva
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID único de la reserva
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarEstadoReservaRequest'
+            example:
+              estado: "Confirmada"
+      responses:
+        '204':
+          description: Estado actualizado con éxito
+        '400':
+          description: Estado inválido suministrado
+        '404':
+          description: Reserva no encontrada
+
+# ════════════════════════════════════════
+# COMPONENTES / MODELOS
+# ════════════════════════════════════════
+components:
+  schemas:
+
+    # -- Modelos de Alojamientos --
+    CrearAlojamientoRequest:
+      type: object
+      required:
+        - socioId
+        - tipoAlojamientoId
+        - nombre
+        - direccion
+      properties:
+        socioId:
+          type: integer
+          example: 1
+        tipoAlojamientoId:
+          type: integer
+          example: 1
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Hostal Israel"
+        ciudad:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "Quito"
+        direccion:
+          type: string
+          maxLength: 300
+          example: "Av. Amazonas y Naciones Unidas"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Alojamiento cómodo ubicado en una zona céntrica."
+        admiteMascotas:
+          type: boolean
+          default: false
+          example: true
+        tienePiscina:
+          type: boolean
+          default: false
+          example: false
+        tieneParqueadero:
+          type: boolean
+          default: false
+          example: true
+
+    ActualizarAlojamientoRequest:
+      type: object
+      required:
+        - nombre
+        - direccion
+        - tipoAlojamientoId
+        - admiteMascotas
+        - tienePiscina
+        - tieneParqueadero
+      properties:
+        nombre:
+          type: string
+          maxLength: 200
+          example: "Hostal Israel Actualizado"
+        ciudad:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "Quito"
+        direccion:
+          type: string
+          maxLength: 300
+          example: "Av. Amazonas y Naciones Unidas, Quito"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Alojamiento actualizado con mejores servicios."
+        tipoAlojamientoId:
+          type: integer
+          example: 1
+        admiteMascotas:
+          type: boolean
+          example: true
+        tienePiscina:
+          type: boolean
+          example: false
+        tieneParqueadero:
+          type: boolean
+          example: true
+        estrellas:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 5
+          example: 3
+
+    AlojamientoResponse:
+      type: object
+      properties:
+        alojamientoId:
+          type: integer
+          example: 3
+        socioId:
+          type: integer
+          example: 1
+        tipoAlojamientoId:
+          type: integer
+          example: 1
+        tipoAlojamientoNombre:
+          type: string
+          example: ""
+        nombre:
+          type: string
+          example: "Hostal Israel"
+        ciudad:
+          type: string
+          nullable: true
+          example: "Quito"
+        direccion:
+          type: string
+          example: "Av. Amazonas y Naciones Unidas"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Alojamiento cómodo ubicado en una zona céntrica."
+        estrellas:
+          type: integer
+          nullable: true
+          example: null
+        calificacionPromedio:
+          type: number
+          format: decimal
+          example: 0.00
+        totalResenas:
+          type: integer
+          example: 0
+        admiteMascotas:
+          type: boolean
+          example: true
+        tienePiscina:
+          type: boolean
+          example: false
+        tieneParqueadero:
+          type: boolean
+          example: true
+        estado:
+          type: string
+          example: "Pendiente"
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2026-05-21T00:06:12.875059"
+
+    # -- Modelos de Habitaciones --
+    CrearHabitacionRequest:
+      type: object
+      required:
+        - alojamientoId
+        - nombre
+        - capacidadAdultos
+        - precioNoche
+      properties:
+        alojamientoId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: "Habitación Matrimonial"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Habitación cómoda para dos adultos, con baño privado y servicios básicos."
+        capacidadAdultos:
+          type: integer
+          minimum: 1
+          example: 2
+        capacidadNinos:
+          type: integer
+          minimum: 0
+          example: 0
+        numBanos:
+          type: integer
+          minimum: 0
+          example: 1
+        numDormitorios:
+          type: integer
+          minimum: 0
+          example: 1
+        tieneCocina:
+          type: boolean
+          example: false
+        tieneAireAcondicionado:
+          type: boolean
+          example: true
+        superficieM2:
+          type: number
+          example: 25
+        precioNoche:
+          type: number
+          example: 35
+
+    HabitacionResponse:
+      type: object
+      properties:
+        habitacionId:
+          type: integer
+          example: 1
+        alojamientoId:
+          type: integer
+          example: 3
+        nombre:
+          type: string
+          example: "Habitación Matrimonial"
+        descripcion:
+          type: string
+          nullable: true
+          example: "Habitación cómoda para dos adultos, con baño privado y servicios básicos."
+        capacidadAdultos:
+          type: integer
+          example: 2
+        capacidadNinos:
+          type: integer
+          example: 0
+        numBanos:
+          type: integer
+          example: 1
+        numDormitorios:
+          type: integer
+          example: 1
+        tieneCocina:
+          type: boolean
+          example: false
+        tieneAireAcondicionado:
+          type: boolean
+          example: true
+        superficieM2:
+          type: number
+          example: 25
+        precioNoche:
+          type: number
+          example: 35
+
+    # -- Modelos de Calendario --
+    CalendarioResponse:
+      type: object
+      properties:
+        calendarioId:
+          type: integer
+          example: 105
+        habitacionId:
+          type: integer
+          example: 1
+        fecha:
+          type: string
+          format: date
+          example: "2026-05-22"
+        estado:
+          type: string
+          example: "Disponible"
+
+    BloquearFechasRequest:
+      type: object
+      required:
+        - habitacionId
+        - fechaInicio
+        - fechaFin
+      properties:
+        habitacionId:
+          type: integer
+          example: 1
+        fechaInicio:
+          type: string
+          format: date
+          example: "2026-05-22"
+        fechaFin:
+          type: string
+          format: date
+          example: "2026-05-24"
+
+    # -- Modelos de Reservas / Booking --
+    CrearReservaRequest:
+      type: object
+      required:
+        - clienteId
+        - alojamientoId
+        - fechaCheckIn
+        - fechaCheckOut
+        - habitaciones
+      properties:
+        clienteId:
+          type: integer
+          example: 1
+        alojamientoId:
+          type: integer
+          example: 3
+        fechaCheckIn:
+          type: string
+          format: date
+          example: "2026-05-22"
+        fechaCheckOut:
+          type: string
+          format: date
+          example: "2026-05-24"
+        numAdultos:
+          type: integer
+          default: 1
+          example: 2
+        numNinos:
+          type: integer
+          default: 0
+          example: 0
+        llevaMascotas:
+          type: boolean
+          default: false
+          example: true
+        codigoDescuento:
+          type: string
+          nullable: true
+          example: ""
+        habitaciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleHabitacionRequest'
+
+    DetalleHabitacionRequest:
+      type: object
+      required:
+        - habitacionId
+        - precioPorNoche
+        - numNoches
+      properties:
+        habitacionId:
+          type: integer
+          example: 1
+        precioPorNoche:
+          type: number
+          minimum: 1
+          example: 35
+        numNoches:
+          type: integer
+          minimum: 1
+          example: 2
+
+    ReservaResponse:
+      type: object
+      properties:
+        reservaId:
+          type: integer
+          example: 1
+        clienteId:
+          type: integer
+          example: 1
+        alojamientoId:
+          type: integer
+          example: 3
+        fechaCheckIn:
+          type: string
+          format: date
+          example: "2026-05-22"
+        fechaCheckOut:
+          type: string
+          format: date
+          example: "2026-05-24"
+        numAdultos:
+          type: integer
+          example: 2
+        numNinos:
+          type: integer
+          example: 0
+        llevaMascotas:
+          type: boolean
+          example: true
+        numHabitaciones:
+          type: integer
+          example: 1
+        subTotal:
+          type: number
+          example: 70
+        total:
+          type: number
+          example: 70
+        estado:
+          type: string
+          example: "Pendiente"
+        codigoReserva:
+          type: string
+          example: "RES-1-ab12"
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2026-05-21T01:30:00Z"
+        detallesHabitacion:
+          type: array
+          items:
+            $ref: '#/components/schemas/DetalleHabitacionResponse'
+        codigoDescuentoAplicado:
+          type: string
+          nullable: true
+          example: null
+        porcentajeDescuento:
+          type: number
+          nullable: true
+          example: null
+
+    DetalleHabitacionResponse:
+      type: object
+      properties:
+        detalleId:
+          type: integer
+          example: 1
+        habitacionId:
+          type: integer
+          example: 1
+        precioPorNoche:
+          type: number
+          example: 35
+        numNoches:
+          type: integer
+          example: 2
+        subTotalHabitacion:
+          type: number
+          example: 70
+
+    ReservaResumenResponse:
+      type: object
+      description: Formato simplificado sin listado de habitaciones para consultas ligeras.
+      properties:
+        reservaId:
+          type: integer
+          example: 1
+        clienteId:
+          type: integer
+          example: 1
+        alojamientoId:
+          type: integer
+          example: 3
+        fechaCheckIn:
+          type: string
+          format: date
+          example: "2026-05-22"
+        fechaCheckOut:
+          type: string
+          format: date
+          example: "2026-05-24"
+        numHabitaciones:
+          type: integer
+          example: 1
+        total:
+          type: number
+          example: 70
+        estado:
+          type: string
+          example: "Pendiente"
+        codigoReserva:
+          type: string
+          example: "RES-1-ab12"
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2026-05-21T01:30:00Z"
+
+    ActualizarEstadoReservaRequest:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          maxLength: 30
+          example: "Confirmada"
+
+    # -- Estructura de Error --
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Habitación 1 no disponible o error en validación gRPC."
+        details:
+          type: string
+          example: "BusinessRuleException"

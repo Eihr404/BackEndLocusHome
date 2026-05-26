@@ -137,6 +137,23 @@ public class ReservasService : IReservasService
         try
         {
             var created = await _reservasDataService.CreateAsync(model);
+
+            foreach (var habReq in request.Habitaciones)
+            {
+                var bloqueo = await _calendarioGrpcClient.BloquearFechasAsync(new Shared.Protos.BloqueoFechasRequest
+                {
+                    HabitacionId = habReq.HabitacionId,
+                    FechaInicio = request.FechaCheckIn.ToString("yyyy-MM-dd"),
+                    FechaFin = request.FechaCheckOut.ToString("yyyy-MM-dd")
+                });
+
+                if (!bloqueo.Exito)
+                {
+                    throw new BusinessRuleException(
+                        $"No fue posible bloquear la disponibilidad de la habitación {habReq.HabitacionId}: {bloqueo.Mensaje}");
+                }
+            }
+
             await _unitOfWork.CommitTransactionAsync();
             
             // TODO: Publicar evento a RabbitMQ -> ReservaCreadaEvent

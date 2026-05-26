@@ -8,6 +8,7 @@ package calendario;
 // Usado internamente por el microservicio de Reservas antes de confirmar una reserva.
 service CalendarioGrpc {
   rpc VerificarDisponibilidad (DisponibilidadRequest) returns (DisponibilidadResponse);
+  rpc BloquearFechas (BloqueoFechasRequest) returns (BloqueoFechasResponse);
 }
 
 message DisponibilidadRequest {
@@ -18,5 +19,16 @@ message DisponibilidadRequest {
 
 message DisponibilidadResponse {
   bool disponible = 1;
+  string mensaje = 2;
+}
+
+message BloqueoFechasRequest {
+  int32 habitacion_id = 1;
+  string fecha_inicio = 2; // Formato: "YYYY-MM-DD"
+  string fecha_fin = 3;    // Formato: "YYYY-MM-DD"
+}
+
+message BloqueoFechasResponse {
+  bool exito = 1;
   string mensaje = 2;
 }

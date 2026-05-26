@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { catchError, forkJoin, map, of } from 'rxjs';
 
-import { CrearReservaRequest, ReservaCreada, ReservaResumen } from '../models/reserva.model';
+import {
+  CrearReservaRequest,
+  ReservaAlojamientoDetalle,
+  ReservaCreada,
+  ReservaDetalleHabitacion,
+  ReservaResumen,
+} from '../models/reserva.model';
 import { API_GATEWAY_BASE_URL, RESERVAS_API_BASE_URL } from './api.config';
 
 const MOCK_RESERVAS: ReservaResumen[] = [
@@ -78,6 +84,16 @@ export class ReservasService {
           this.unwrapCollection(response).map((item) =>
             this.normalizeReservation(item, { alojamientoId, alojamientoNombre }),
           ),
+        ),
+      );
+  }
+
+  getDetailedByAlojamiento(alojamientoId: number) {
+    return this.http
+      .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/alojamiento/${alojamientoId}`)
+      .pipe(
+        map((response) =>
+          this.unwrapCollection(response).map((item) => this.normalizeDetailedReservation(item, alojamientoId)),
         ),
       );
   }
@@ -195,6 +211,33 @@ export class ReservasService {
       estado: item?.estado ?? item?.Estado ?? 'Pendiente',
       total: Number(item?.total ?? item?.Total ?? 0) || 0,
       moneda: item?.moneda ?? item?.Moneda ?? 'USD',
+    };
+  }
+
+  private normalizeDetailedReservation(item: any, alojamientoId: number): ReservaAlojamientoDetalle {
+    const details = item.detallesHabitacion ?? item.DetallesHabitacion ?? [];
+
+    return {
+      reservaId: item.reservaId ?? item.ReservaId ?? 0,
+      clienteId: item.clienteId ?? item.ClienteId ?? 0,
+      alojamientoId: item.alojamientoId ?? item.AlojamientoId ?? alojamientoId,
+      fechaCheckIn: item.fechaCheckIn ?? item.FechaCheckIn ?? '',
+      fechaCheckOut: item.fechaCheckOut ?? item.FechaCheckOut ?? '',
+      estado: item.estado ?? item.Estado ?? 'Pendiente',
+      codigoReserva: item.codigoReserva ?? item.CodigoReserva ?? undefined,
+      detallesHabitacion: Array.isArray(details)
+        ? details.map((detail: any) => this.normalizeReservationDetail(detail))
+        : [],
+    };
+  }
+
+  private normalizeReservationDetail(item: any): ReservaDetalleHabitacion {
+    return {
+      detalleId: item.detalleId ?? item.DetalleId ?? 0,
+      habitacionId: item.habitacionId ?? item.HabitacionId ?? 0,
+      precioPorNoche: Number(item.precioPorNoche ?? item.PrecioPorNoche ?? 0) || 0,
+      numNoches: item.numNoches ?? item.NumNoches ?? 0,
+      subTotalHabitacion: Number(item.subTotalHabitacion ?? item.SubTotalHabitacion ?? 0) || 0,
     };
   }
 
