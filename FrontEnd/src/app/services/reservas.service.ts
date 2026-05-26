@@ -185,6 +185,7 @@ export class ReservasService {
     return {
       reservaId: item.reservaId ?? item.ReservaId ?? 0,
       codigoReserva: item.codigoReserva ?? item.CodigoReserva ?? undefined,
+      alojamientoId,
       alojamientoNombre:
         item.alojamientoNombre ??
         item.AlojamientoNombre ??

@@ -1,6 +1,7 @@
 export interface ReservaResumen {
   reservaId: number;
   codigoReserva?: string;
+  alojamientoId?: number;
   alojamientoNombre: string;
   clienteNombre: string;
   fechaEntrada: string;

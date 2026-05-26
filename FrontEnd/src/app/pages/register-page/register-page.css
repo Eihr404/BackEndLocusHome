@@ -8,15 +8,17 @@
   width: min(720px, 100%);
   padding: 2rem;
   border-radius: 1.8rem;
-  background: rgba(255, 249, 242, 0.92);
-  color: #17312d;
+  background: rgba(255, 255, 255, 0.94);
+  color: #063847;
+  border: 1px solid rgba(0, 111, 139, 0.08);
+  box-shadow: 0 20px 50px rgba(20, 83, 104, 0.14);
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 0.75rem;
-  color: #8a7156;
+  color: #08748a;
 }
 
 form {
@@ -26,24 +28,66 @@ form {
 }
 
 input,
+select,
 button {
   padding: 0.95rem 1rem;
   border-radius: 1rem;
-  border: 1px solid rgba(23, 49, 45, 0.16);
+  border: 1px solid rgba(0, 111, 139, 0.16);
+  background: #f7fbfc;
+  color: #063847;
   font: inherit;
 }
 
 button {
   grid-column: 1 / -1;
-  background: #17312d;
+  background: #006f8b;
   color: #fff;
   cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.68;
+  cursor: wait;
 }
 
 .feedback {
   margin-top: 1rem;
   color: #2a7f6a;
   font-weight: 700;
+}
+
+.feedback.error {
+  color: #8d2d1f;
+}
+
+.success-panel {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1.4rem;
+  padding: 1.2rem;
+  border-radius: 1.2rem;
+  background: #e8f7fb;
+  color: #0b6075;
+}
+
+.success-panel strong {
+  font-size: 1.25rem;
+}
+
+.success-panel p {
+  margin: 0;
+}
+
+.success-panel a {
+  width: fit-content;
+  padding: 0.85rem 1rem;
+  border-radius: 999px;
+  background: #006f8b;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
 }
 
 @media (max-width: 760px) {

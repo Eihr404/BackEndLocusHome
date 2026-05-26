@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AlojamientoCard } from '../../models/alojamiento.model';
 import { AlojamientosService } from '../../services/alojamientos.service';
@@ -14,6 +14,7 @@ import { AlojamientosService } from '../../services/alojamientos.service';
 })
 export class CatalogPageComponent implements OnInit {
   private readonly alojamientosService = inject(AlojamientosService);
+  private readonly route = inject(ActivatedRoute);
   private readonly cdr = inject(ChangeDetectorRef);
 
   search = '';
@@ -38,6 +39,12 @@ export class CatalogPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.route.queryParamMap.subscribe((params) => {
+      this.search = params.get('search') ?? '';
+      this.city = params.get('city') ?? '';
+      this.cdr.detectChanges();
+    });
+
     this.loadCatalog();
   }
 

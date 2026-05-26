@@ -3,19 +3,20 @@
     <p class="eyebrow">Registro cliente</p>
     <h1>Crea tu cuenta en la plataforma</h1>
 
-    <form (ngSubmit)="submit()">
-      <select [(ngModel)]="form.rol" name="rol">
+    <form (ngSubmit)="submit()" *ngIf="!created">
+      <select [(ngModel)]="form.rol" name="rol" [disabled]="loading">
         <option value="cliente">Cliente</option>
         <option value="socio">Socio</option>
       </select>
-      <input [(ngModel)]="form.nombreCompleto" name="nombreCompleto" placeholder="Nombre completo" required />
-      <input [(ngModel)]="form.email" name="email" type="email" placeholder="Correo" required />
-      <input [(ngModel)]="form.password" name="password" type="password" placeholder="Contrasena" required />
+      <input [(ngModel)]="form.nombreCompleto" name="nombreCompleto" placeholder="Nombre completo" [disabled]="loading" required />
+      <input [(ngModel)]="form.email" name="email" type="email" placeholder="Correo" [disabled]="loading" required />
+      <input [(ngModel)]="form.password" name="password" type="password" placeholder="Contrasena" [disabled]="loading" required />
       <input
         *ngIf="form.rol === 'cliente'"
         [(ngModel)]="form.cedula"
         name="cedula"
         placeholder="Cedula"
+        [disabled]="loading"
         required
       />
       <input
@@ -23,6 +24,7 @@
         [(ngModel)]="form.telefono"
         name="telefono"
         placeholder="Telefono"
+        [disabled]="loading"
         required
       />
       <input
@@ -30,11 +32,18 @@
         [(ngModel)]="form.domicilio"
         name="domicilio"
         placeholder="Domicilio"
+        [disabled]="loading"
         required
       />
-      <button type="submit">Registrar</button>
+      <button type="submit" [disabled]="loading">{{ loading ? 'Creando usuario...' : 'Registrar' }}</button>
     </form>
 
-    <p *ngIf="feedback" class="feedback">{{ feedback }}</p>
+    <section *ngIf="created" class="success-panel">
+      <strong>Usuario creado con exito</strong>
+      <p>{{ feedback }}</p>
+      <a routerLink="/login">Ir a iniciar sesion</a>
+    </section>
+
+    <p *ngIf="error" class="feedback error">{{ error }}</p>
   </article>
 </section>

@@ -1,48 +1,67 @@
-<section class="hero">
+<section class="home-hero">
   <div class="hero-copy">
-    <p class="eyebrow">Angular + microservicios + una sola SPA</p>
-    <h1>Un front-end academico estilo Airbnb, pensado para cliente y socio.</h1>
+    <img class="brand-logo" src="/logo.png" alt="Locus Alojamientos" />
+    <p class="eyebrow">Alojamientos en Ecuador</p>
+    <h1>Encuentra un lugar comodo para tu proxima estadia.</h1>
     <p class="lead">
-      Toda la experiencia vive en un solo <code>index.html</code>. Angular redibuja cada pantalla
-      con el router, los layouts y los guards, sin plantillas prefabricadas.
+      Explora hoteles, departamentos y hostales con habitaciones disponibles, imagenes reales y reservas en linea.
     </p>
-
-    <div class="hero-actions">
-      <a class="primary-btn" routerLink="/explorar">Ver marketplace</a>
-      <a class="secondary-btn" routerLink="/socio">Entrar como socio</a>
-    </div>
   </div>
 
-  <div class="hero-panel">
-    <div class="metric-card">
-      <span>Arquitectura</span>
-      <strong>services + models + layouts + guards</strong>
-    </div>
-    <div class="metric-card">
-      <span>Sesion actual</span>
-      <strong>{{ session()?.role ?? 'invitado' }}</strong>
-    </div>
-    <div class="metric-card">
-      <span>Integracion</span>
-      <strong>API Gateway y microservicios desacoplados</strong>
-    </div>
-  </div>
+  <form class="search-card" (ngSubmit)="searchStays()">
+    <label>
+      Destino
+      <input [(ngModel)]="city" name="city" placeholder="Quito, Cuenca, Manta..." />
+    </label>
+
+    <label>
+      Nombre o tipo de alojamiento
+      <input [(ngModel)]="search" name="search" placeholder="Hotel, hostal, departamento..." />
+    </label>
+
+    <button type="submit">Buscar alojamientos</button>
+  </form>
 </section>
 
-<section class="grid-section">
-  <article class="feature-card">
-    <h2>Experiencia cliente</h2>
-    <p>Flujo ideal para descubrir, comparar, revisar detalle y consultar reservas.</p>
-    <ul>
-      <li *ngFor="let step of customerSteps">{{ step }}</li>
-    </ul>
-  </article>
+<section class="quick-actions">
+  <a routerLink="/explorar">
+    <strong>Explorar ahora</strong>
+    <span>Ver alojamientos disponibles</span>
+  </a>
 
-  <article class="feature-card accent">
-    <h2>Experiencia socio</h2>
-    <p>Panel sobrio para gestionar propiedades, ocupacion e indicadores operativos.</p>
-    <ul>
-      <li *ngFor="let step of partnerSteps">{{ step }}</li>
-    </ul>
+  <a routerLink="/mis-reservas">
+    <strong>Mis reservas</strong>
+    <span>Consulta y paga tus estadias</span>
+  </a>
+
+  <a routerLink="/socio">
+    <strong>Panel socio</strong>
+    <span>Gestiona tus alojamientos</span>
+  </a>
+</section>
+
+<section class="section-heading">
+  <p class="eyebrow">Destinos populares</p>
+  <h2>Empieza por una ciudad</h2>
+</section>
+
+<section class="city-grid">
+  <article class="city-card" *ngFor="let cityItem of featuredCities">
+    <span>{{ cityItem.name }}</span>
+    <p>{{ cityItem.detail }}</p>
+    <a [routerLink]="['/explorar']" [queryParams]="{ city: cityItem.name }">Ver opciones</a>
   </article>
+</section>
+
+<section class="stay-types">
+  <div>
+    <p class="eyebrow">Para cada viaje</p>
+    <h2>Alojamientos listos para reservar</h2>
+  </div>
+
+  <div class="type-list">
+    <a *ngFor="let type of stayTypes" [routerLink]="['/explorar']" [queryParams]="{ search: type }">
+      {{ type }}
+    </a>
+  </div>
 </section>

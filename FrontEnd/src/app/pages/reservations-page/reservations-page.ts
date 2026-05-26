@@ -2,11 +2,12 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 import { FacturaResumen, MetodoPago } from '../../models/factura.model';
 import { ReservaResumen } from '../../models/reserva.model';
 import { AuthService } from '../../services/auth.service';
+import { AlojamientosService } from '../../services/alojamientos.service';
 import { FacturacionService } from '../../services/facturacion.service';
 import { ReservasService } from '../../services/reservas.service';
 
@@ -18,6 +19,7 @@ import { ReservasService } from '../../services/reservas.service';
 })
 export class ReservationsPageComponent {
   private readonly authService = inject(AuthService);
+  private readonly alojamientosService = inject(AlojamientosService);
   private readonly reservasService = inject(ReservasService);
   private readonly facturacionService = inject(FacturacionService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -216,8 +218,10 @@ export class ReservationsPageComponent {
   }
 
   private loadReservations() {
-    this.getReservationsRequest().subscribe((items) => {
-      this.reservations = this.filterVisibleReservations(items);
+    this.getReservationsRequest().pipe(
+      switchMap((items) => this.resolveReservationPropertyNames(this.filterVisibleReservations(items))),
+    ).subscribe((items) => {
+      this.reservations = items;
       this.loading = false;
       this.loadInvoiceSummaries(this.reservations);
       this.cdr.detectChanges();
@@ -281,5 +285,40 @@ export class ReservationsPageComponent {
 
   private filterVisibleReservations(items: ReservaResumen[]) {
     return items.filter((reservation) => reservation.estado.trim().toLowerCase() !== 'cancelado');
+  }
+
+  private resolveReservationPropertyNames(reservations: ReservaResumen[]) {
+    const itemsToResolve = reservations.filter((reservation) =>
+      !!reservation.alojamientoId &&
+      /^Alojamiento #\d+$/i.test(reservation.alojamientoNombre.trim()),
+    );
+
+    if (!itemsToResolve.length) {
+      return of(reservations);
+    }
+
+    const uniqueIds = [...new Set(itemsToResolve.map((reservation) => reservation.alojamientoId!))];
+
+    return forkJoin(
+      uniqueIds.map((alojamientoId) =>
+        this.alojamientosService.getById(alojamientoId).pipe(
+          map((property) => ({ alojamientoId, nombre: property?.nombre ?? null })),
+          catchError(() => of({ alojamientoId, nombre: null })),
+        ),
+      ),
+    ).pipe(
+      map((properties) => {
+        const nameById = new Map(
+          properties
+            .filter((property) => !!property.nombre)
+            .map((property) => [property.alojamientoId, property.nombre as string]),
+        );
+
+        return reservations.map((reservation) => {
+          const nombre = reservation.alojamientoId ? nameById.get(reservation.alojamientoId) : null;
+          return nombre ? { ...reservation, alojamientoNombre: nombre } : reservation;
+        });
+      }),
+    );
   }
 }
