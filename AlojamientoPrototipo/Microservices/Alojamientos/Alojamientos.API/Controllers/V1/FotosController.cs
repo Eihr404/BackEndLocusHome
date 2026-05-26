@@ -2,6 +2,7 @@ using Alojamientos.Business.DTOs.Fotos;
 using Alojamientos.Business.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Alojamientos.API.Services;
+using Alojamientos.API.Models;
 
 namespace Alojamientos.API.Controllers.V1;
 
@@ -44,14 +45,13 @@ public class FotosController : ControllerBase
     }
 
     [HttpPost("cloudinary/archivo")]
+    [Consumes("multipart/form-data")]
     [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> AgregarArchivoDesdeCloudinary(
-        [FromForm] int alojamientoId,
-        [FromForm] IFormFile archivo,
-        [FromForm] int orden = 0,
-        [FromForm] string? descripcion = null,
+        [FromForm] SubirFotoCloudinaryArchivoRequest request,
         CancellationToken cancellationToken = default)
     {
+        var archivo = request.Archivo;
         if (archivo is null || archivo.Length == 0)
         {
             return BadRequest(new { mensaje = "Debes seleccionar una imagen valida." });
@@ -65,10 +65,10 @@ public class FotosController : ControllerBase
             cancellationToken);
 
         var result = await _service.AgregarAsync(new AgregarFotoRequest(
-            alojamientoId,
+            request.AlojamientoId,
             secureUrl,
-            orden,
-            descripcion
+            request.Orden,
+            request.Descripcion
         ));
 
         return Created("", result);
