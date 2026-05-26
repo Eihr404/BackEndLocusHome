@@ -44,7 +44,7 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Cloudinary upload failed with status {StatusCode}: {Payload}", response.StatusCode, payload);
-            throw new InvalidOperationException("No se pudo subir la imagen a Cloudinary.");
+            throw new InvalidOperationException($"Cloudinary rechazo la imagen: {payload}");
         }
 
         var parsed = JsonSerializer.Deserialize<CloudinaryUploadResponse>(payload);
@@ -84,7 +84,7 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError("Cloudinary file upload failed with status {StatusCode}: {Payload}", response.StatusCode, payload);
-            throw new InvalidOperationException("No se pudo subir el archivo a Cloudinary.");
+            throw new InvalidOperationException($"Cloudinary rechazo el archivo: {payload}");
         }
 
         var parsed = JsonSerializer.Deserialize<CloudinaryUploadResponse>(payload);
@@ -125,7 +125,10 @@ public class CloudinaryUploadService : ICloudinaryUploadService
                 throw new InvalidOperationException("La variable CLOUDINARY_URL no tiene un formato valido.");
             }
 
-            return new CloudinaryCredentials(uri.Host, userInfo[0], userInfo[1]);
+            return new CloudinaryCredentials(
+                uri.Host,
+                Uri.UnescapeDataString(userInfo[0]),
+                Uri.UnescapeDataString(userInfo[1]));
         }
     }
 }

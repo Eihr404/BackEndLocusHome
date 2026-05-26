@@ -260,9 +260,14 @@ export class PartnerService {
         this.loadProperties(this.selectedPropertySignal()?.socioId ?? this.getCurrentSocioId());
         onDone?.(photo);
       },
-      error: () => {
+      error: (error) => {
         this.savingSignal.set(false);
-        this.messageSignal.set('No se pudo cargar la imagen con Cloudinary.');
+        this.messageSignal.set(
+          error?.error?.mensaje ??
+            error?.error?.message ??
+            error?.message ??
+            'No se pudo cargar la imagen con Cloudinary.',
+        );
       },
     });
   }
@@ -279,9 +284,14 @@ export class PartnerService {
         this.loadProperties(this.selectedPropertySignal()?.socioId ?? this.getCurrentSocioId());
         onDone?.(photo);
       },
-      error: () => {
+      error: (error) => {
         this.savingSignal.set(false);
-        this.messageSignal.set('No se pudo cargar la imagen con Cloudinary.');
+        this.messageSignal.set(
+          error?.error?.mensaje ??
+            error?.error?.message ??
+            error?.message ??
+            'No se pudo cargar la imagen con Cloudinary.',
+        );
       },
     });
   }

@@ -57,12 +57,20 @@ public class FotosController : ControllerBase
             return BadRequest(new { mensaje = "Debes seleccionar una imagen valida." });
         }
 
-        await using var stream = archivo.OpenReadStream();
-        var secureUrl = await _cloudinaryUploadService.UploadImageAsync(
-            stream,
-            archivo.FileName,
-            archivo.ContentType,
-            cancellationToken);
+        string secureUrl;
+        try
+        {
+            await using var stream = archivo.OpenReadStream();
+            secureUrl = await _cloudinaryUploadService.UploadImageAsync(
+                stream,
+                archivo.FileName,
+                archivo.ContentType,
+                cancellationToken);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(StatusCodes.Status502BadGateway, new { mensaje = ex.Message });
+        }
 
         var result = await _service.AgregarAsync(new AgregarFotoRequest(
             request.AlojamientoId,
