@@ -29,6 +29,7 @@ export class ReservationsPageComponent {
   loadingPaymentMethods = false;
   activePaymentReservationId: number | null = null;
   paymentLoadingReservationId: number | null = null;
+  cancelLoadingReservationId: number | null = null;
   paymentMessage = '';
   paymentError = '';
   paymentForm = {
@@ -64,8 +65,44 @@ export class ReservationsPageComponent {
       status !== 'pagado' &&
       status !== 'confirmada' &&
       status !== 'confirmado' &&
-      status !== 'pendiente de confirmacion'
+      status !== 'pendiente de confirmacion' &&
+      status !== 'cancelado'
     );
+  }
+
+  canCancel(reservation: ReservaResumen) {
+    const status = reservation.estado.trim().toLowerCase();
+    return (
+      status !== 'cancelado' &&
+      status !== 'pagado' &&
+      status !== 'confirmada' &&
+      status !== 'confirmado'
+    );
+  }
+
+  cancelReservation(reservation: ReservaResumen) {
+    this.paymentMessage = '';
+    this.paymentError = '';
+    this.cancelLoadingReservationId = reservation.reservaId;
+
+    this.reservasService
+      .updateReservationStatus(reservation.reservaId, 'Cancelado')
+      .pipe(switchMap(() => this.getReservationsRequest()))
+      .subscribe({
+        next: (reservations) => {
+          this.reservations = this.filterVisibleReservations(reservations);
+          delete this.invoiceByReservationId[reservation.reservaId];
+          this.cancelLoadingReservationId = null;
+          this.closePayment();
+          this.paymentMessage = 'Reserva cancelada correctamente.';
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.cancelLoadingReservationId = null;
+          this.paymentError = 'No fue posible cancelar esta reserva.';
+          this.cdr.detectChanges();
+        },
+      });
   }
 
   submitPayment(reservation: ReservaResumen) {
@@ -180,9 +217,9 @@ export class ReservationsPageComponent {
 
   private loadReservations() {
     this.getReservationsRequest().subscribe((items) => {
-      this.reservations = items;
+      this.reservations = this.filterVisibleReservations(items);
       this.loading = false;
-      this.loadInvoiceSummaries(items);
+      this.loadInvoiceSummaries(this.reservations);
       this.cdr.detectChanges();
     });
   }
@@ -240,5 +277,9 @@ export class ReservationsPageComponent {
 
   private getToday() {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private filterVisibleReservations(items: ReservaResumen[]) {
+    return items.filter((reservation) => reservation.estado.trim().toLowerCase() !== 'cancelado');
   }
 }

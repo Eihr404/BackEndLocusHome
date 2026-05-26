@@ -20,12 +20,22 @@
 
     <label>
       Check-in
-      <input [(ngModel)]="bookingForm.fechaCheckIn" (ngModelChange)="onDateRangeChange()" type="date" name="fechaCheckIn" />
+      <input
+        [(ngModel)]="bookingForm.fechaCheckIn"
+        (ngModelChange)="onDateRangeChange()"
+        type="date"
+        name="fechaCheckIn"
+        [min]="today" />
     </label>
 
     <label>
       Check-out
-      <input [(ngModel)]="bookingForm.fechaCheckOut" (ngModelChange)="onDateRangeChange()" type="date" name="fechaCheckOut" />
+      <input
+        [(ngModel)]="bookingForm.fechaCheckOut"
+        (ngModelChange)="onDateRangeChange()"
+        type="date"
+        name="fechaCheckOut"
+        [min]="bookingForm.fechaCheckIn || today" />
     </label>
 
     <button type="button" class="search-rooms-btn" (click)="searchAvailableRooms()" [disabled]="availabilityLoading">

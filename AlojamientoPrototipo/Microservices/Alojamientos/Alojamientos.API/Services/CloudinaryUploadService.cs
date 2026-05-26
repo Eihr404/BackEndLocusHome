@@ -8,6 +8,7 @@ namespace Alojamientos.API.Services;
 public interface ICloudinaryUploadService
 {
     Task<string> UploadImageFromUrlAsync(string sourceUrl, CancellationToken cancellationToken = default);
+    Task<string> UploadImageAsync(Stream stream, string fileName, string? contentType, CancellationToken cancellationToken = default);
 }
 
 public class CloudinaryUploadService : ICloudinaryUploadService
@@ -44,6 +45,46 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         {
             _logger.LogError("Cloudinary upload failed with status {StatusCode}: {Payload}", response.StatusCode, payload);
             throw new InvalidOperationException("No se pudo subir la imagen a Cloudinary.");
+        }
+
+        var parsed = JsonSerializer.Deserialize<CloudinaryUploadResponse>(payload);
+        if (string.IsNullOrWhiteSpace(parsed?.SecureUrl))
+        {
+            throw new InvalidOperationException("Cloudinary no devolvio una URL segura para la imagen.");
+        }
+
+        return parsed.SecureUrl;
+    }
+
+    public async Task<string> UploadImageAsync(
+        Stream stream,
+        string fileName,
+        string? contentType,
+        CancellationToken cancellationToken = default)
+    {
+        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        var signature = BuildSignature(timestamp, _credentials.ApiSecret);
+        var endpoint = $"https://api.cloudinary.com/v1_1/{_credentials.CloudName}/image/upload";
+
+        using var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(
+            string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType);
+
+        using var content = new MultipartFormDataContent
+        {
+            { fileContent, "file", string.IsNullOrWhiteSpace(fileName) ? "upload.bin" : fileName },
+            { new StringContent(_credentials.ApiKey), "api_key" },
+            { new StringContent(timestamp), "timestamp" },
+            { new StringContent(signature), "signature" }
+        };
+
+        using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
+        var payload = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogError("Cloudinary file upload failed with status {StatusCode}: {Payload}", response.StatusCode, payload);
+            throw new InvalidOperationException("No se pudo subir el archivo a Cloudinary.");
         }
 
         var parsed = JsonSerializer.Deserialize<CloudinaryUploadResponse>(payload);

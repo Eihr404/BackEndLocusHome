@@ -267,6 +267,25 @@ export class PartnerService {
     });
   }
 
+  uploadPhotoFile(form: FotoAlojamientoForm, file: File, onDone?: (photo: FotoAlojamiento) => void) {
+    this.savingSignal.set(true);
+    this.messageSignal.set('');
+
+    this.alojamientosService.uploadPhotoFileViaCloudinary(form, file).subscribe({
+      next: (photo) => {
+        this.messageSignal.set('Imagen cargada correctamente desde Cloudinary.');
+        this.savingSignal.set(false);
+        this.loadPhotos(form.alojamientoId);
+        this.loadProperties(this.selectedPropertySignal()?.socioId ?? this.getCurrentSocioId());
+        onDone?.(photo);
+      },
+      error: () => {
+        this.savingSignal.set(false);
+        this.messageSignal.set('No se pudo cargar la imagen con Cloudinary.');
+      },
+    });
+  }
+
   deletePhoto(fotoId: number, alojamientoId: number, onDone?: () => void) {
     this.savingSignal.set(true);
     this.messageSignal.set('');

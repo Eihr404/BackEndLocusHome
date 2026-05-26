@@ -271,6 +271,18 @@ export class AlojamientosService {
       .pipe(map((photo) => this.normalizePhoto(photo)));
   }
 
+  uploadPhotoFileViaCloudinary(form: FotoAlojamientoForm, file: File) {
+    const payload = new FormData();
+    payload.append('alojamientoId', `${form.alojamientoId}`);
+    payload.append('archivo', file, file.name);
+    payload.append('orden', `${form.orden ?? 0}`);
+    payload.append('descripcion', form.descripcion || '');
+
+    return this.http
+      .post<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/cloudinary/archivo`, payload)
+      .pipe(map((photo) => this.normalizePhoto(photo)));
+  }
+
   deletePhoto(fotoId: number) {
     return this.http.delete<void>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/${fotoId}`);
   }

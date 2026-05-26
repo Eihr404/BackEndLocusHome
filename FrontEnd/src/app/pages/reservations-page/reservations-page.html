@@ -33,6 +33,14 @@
         (click)="openPayment(reservation)">
         Pagar
       </button>
+      <button
+        *ngIf="canCancel(reservation)"
+        type="button"
+        class="pay-btn"
+        (click)="cancelReservation(reservation)"
+        [disabled]="cancelLoadingReservationId === reservation.reservaId">
+        {{ cancelLoadingReservationId === reservation.reservaId ? 'Cancelando...' : 'Cancelar' }}
+      </button>
       <span *ngIf="!canPay(reservation)" class="paid-badge">Pago completado</span>
     </div>
   </article>

@@ -43,6 +43,37 @@ public class FotosController : ControllerBase
         return Created("", result);
     }
 
+    [HttpPost("cloudinary/archivo")]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> AgregarArchivoDesdeCloudinary(
+        [FromForm] int alojamientoId,
+        [FromForm] IFormFile archivo,
+        [FromForm] int orden = 0,
+        [FromForm] string? descripcion = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (archivo is null || archivo.Length == 0)
+        {
+            return BadRequest(new { mensaje = "Debes seleccionar una imagen valida." });
+        }
+
+        await using var stream = archivo.OpenReadStream();
+        var secureUrl = await _cloudinaryUploadService.UploadImageAsync(
+            stream,
+            archivo.FileName,
+            archivo.ContentType,
+            cancellationToken);
+
+        var result = await _service.AgregarAsync(new AgregarFotoRequest(
+            alojamientoId,
+            secureUrl,
+            orden,
+            descripcion
+        ));
+
+        return Created("", result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Eliminar(int id)
     {

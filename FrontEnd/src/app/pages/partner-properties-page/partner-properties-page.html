@@ -77,16 +77,46 @@
     </p>
 
     <form (ngSubmit)="submitRoom()">
-      <input [(ngModel)]="roomForm.nombre" name="roomNombre" placeholder="Nombre de la habitacion" required />
-      <textarea [(ngModel)]="roomForm.descripcion" name="roomDescripcion" placeholder="Descripcion"></textarea>
+      <label>
+        Nombre de la habitacion
+        <input [(ngModel)]="roomForm.nombre" name="roomNombre" placeholder="Nombre de la habitacion" required />
+      </label>
+
+      <label>
+        Descripcion
+        <textarea [(ngModel)]="roomForm.descripcion" name="roomDescripcion" placeholder="Descripcion"></textarea>
+      </label>
 
       <div class="grid-two">
-        <input [(ngModel)]="roomForm.capacidadAdultos" name="capacidadAdultos" type="number" min="1" placeholder="Adultos" required />
-        <input [(ngModel)]="roomForm.capacidadNinos" name="capacidadNinos" type="number" min="0" placeholder="Ninos" required />
-        <input [(ngModel)]="roomForm.numBanos" name="numBanos" type="number" min="1" placeholder="Banos" required />
-        <input [(ngModel)]="roomForm.numDormitorios" name="numDormitorios" type="number" min="1" placeholder="Dormitorios" required />
-        <input [(ngModel)]="roomForm.superficieM2" name="superficieM2" type="number" min="0" placeholder="Superficie m2" />
-        <input [(ngModel)]="roomForm.precioNoche" name="precioNoche" type="number" min="0" step="0.01" placeholder="Precio por noche" required />
+        <label>
+          Capacidad de adultos
+          <input [(ngModel)]="roomForm.capacidadAdultos" name="capacidadAdultos" type="number" min="1" placeholder="Adultos" required />
+        </label>
+
+        <label>
+          Capacidad de ninos
+          <input [(ngModel)]="roomForm.capacidadNinos" name="capacidadNinos" type="number" min="0" placeholder="Ninos" required />
+        </label>
+
+        <label>
+          Numero de banos
+          <input [(ngModel)]="roomForm.numBanos" name="numBanos" type="number" min="1" placeholder="Banos" required />
+        </label>
+
+        <label>
+          Numero de dormitorios
+          <input [(ngModel)]="roomForm.numDormitorios" name="numDormitorios" type="number" min="1" placeholder="Dormitorios" required />
+        </label>
+
+        <label>
+          Superficie en m2
+          <input [(ngModel)]="roomForm.superficieM2" name="superficieM2" type="number" min="0" placeholder="Superficie m2" />
+        </label>
+
+        <label>
+          Precio por noche
+          <input [(ngModel)]="roomForm.precioNoche" name="precioNoche" type="number" min="0" step="0.01" placeholder="Precio por noche" required />
+        </label>
       </div>
 
       <div class="check-grid">
@@ -127,25 +157,50 @@
     <p class="eyebrow">Galeria del alojamiento</p>
     <h2>Nueva imagen para {{ property.nombre }}</h2>
     <p class="helper">
-      Pega una URL publica y la API la subira a Cloudinary antes de guardarla en la base.
+      Arrastra una imagen o selecciona un archivo. La API la subira a Cloudinary y luego guardara ese enlace en la base.
     </p>
 
     <form (ngSubmit)="submitPhoto()">
       <input
-        [(ngModel)]="photoForm.sourceUrl"
-        name="sourceUrl"
-        type="url"
-        placeholder="https://ejemplo.com/imagen-del-alojamiento.jpg"
-        required
+        #photoFileInput
+        type="file"
+        accept="image/*"
+        hidden
+        (change)="onPhotoFileSelected($event)"
       />
 
-      <div class="grid-two">
-        <input [(ngModel)]="photoForm.orden" name="orden" type="number" min="0" placeholder="Orden" />
-        <input [(ngModel)]="photoForm.descripcion" name="descripcion" placeholder="Descripcion corta" />
+      <div
+        class="upload-dropzone"
+        [class.dragging]="draggingPhoto"
+        [class.has-file]="selectedPhotoFile"
+        (dragover)="onPhotoDragOver($event)"
+        (dragleave)="onPhotoDragLeave($event)"
+        (drop)="onPhotoDrop($event)"
+        (click)="photoFileInput.click()">
+        <strong *ngIf="!selectedPhotoFile">Arrastra tu imagen aqui o haz clic para seleccionarla</strong>
+        <strong *ngIf="selectedPhotoFile">{{ selectedPhotoFile.name }}</strong>
+        <p *ngIf="!selectedPhotoFile">Formatos sugeridos: JPG, PNG, WEBP</p>
+        <p *ngIf="selectedPhotoFile">Tamano: {{ (selectedPhotoFile.size / 1024 / 1024).toFixed(2) }} MB</p>
       </div>
 
+      <div class="grid-two">
+        <label>
+          Orden
+          <input [(ngModel)]="photoForm.orden" name="orden" type="number" min="0" placeholder="Orden" />
+        </label>
+
+        <label>
+          Descripcion corta
+          <input [(ngModel)]="photoForm.descripcion" name="descripcion" placeholder="Descripcion corta" />
+        </label>
+      </div>
+
+      <p *ngIf="photoError" class="message photo-error">{{ photoError }}</p>
+
       <div class="actions-row">
-        <button type="submit" [disabled]="saving()">Cargar imagen</button>
+        <button type="submit" [disabled]="saving() || !selectedPhotoFile">Subir imagen</button>
+        <button type="button" class="secondary" (click)="photoFileInput.click()">Elegir archivo</button>
+        <button *ngIf="selectedPhotoFile" type="button" class="secondary" (click)="clearSelectedPhoto()">Quitar</button>
       </div>
     </form>
   </article>

@@ -32,6 +32,9 @@ export class PartnerPropertiesPageComponent {
 
   editingPropertyId: number | null = null;
   editingRoomId: number | null = null;
+  draggingPhoto = false;
+  selectedPhotoFile: File | null = null;
+  photoError = '';
 
   propertyForm: AlojamientoForm = this.createEmptyPropertyForm();
   roomForm: HabitacionForm = this.createEmptyRoomForm();
@@ -93,6 +96,7 @@ export class PartnerPropertiesPageComponent {
   selectProperty(property: AlojamientoCard) {
     this.partnerService.selectProperty(property);
     this.cancelRoomEdit();
+    this.clearSelectedPhoto();
     this.roomForm = {
       ...this.createEmptyRoomForm(),
       alojamientoId: property.alojamientoId,
@@ -163,22 +167,60 @@ export class PartnerPropertiesPageComponent {
 
   submitPhoto() {
     const property = this.selectedProperty();
-    if (!property) {
+    if (!property || !this.selectedPhotoFile) {
       return;
     }
 
-    this.partnerService.uploadPhoto(
+    this.photoError = '';
+
+    this.partnerService.uploadPhotoFile(
       {
         ...this.photoForm,
         alojamientoId: property.alojamientoId,
       },
+      this.selectedPhotoFile,
       () => {
         this.photoForm = {
           ...this.createEmptyPhotoForm(),
           alojamientoId: property.alojamientoId,
         };
+        this.selectedPhotoFile = null;
+        this.draggingPhoto = false;
+        this.photoError = '';
       },
     );
+  }
+
+  onPhotoFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0] ?? null;
+    this.setSelectedPhotoFile(file);
+    if (input) {
+      input.value = '';
+    }
+  }
+
+  onPhotoDragOver(event: DragEvent) {
+    event.preventDefault();
+    this.draggingPhoto = true;
+  }
+
+  onPhotoDragLeave(event: DragEvent) {
+    event.preventDefault();
+    this.draggingPhoto = false;
+  }
+
+  onPhotoDrop(event: DragEvent) {
+    event.preventDefault();
+    this.draggingPhoto = false;
+    const file = event.dataTransfer?.files?.[0] ?? null;
+    this.setSelectedPhotoFile(file);
+  }
+
+  clearSelectedPhoto() {
+    this.selectedPhotoFile = null;
+    this.draggingPhoto = false;
+    this.photoError = '';
   }
 
   deletePhoto(photo: FotoAlojamiento) {
@@ -228,5 +270,19 @@ export class PartnerPropertiesPageComponent {
       orden: 0,
       descripcion: '',
     };
+  }
+
+  private setSelectedPhotoFile(file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      this.photoError = 'Solo puedes subir archivos de imagen.';
+      return;
+    }
+
+    this.photoError = '';
+    this.selectedPhotoFile = file;
   }
 }

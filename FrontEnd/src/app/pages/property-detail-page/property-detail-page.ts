@@ -36,6 +36,7 @@ export class PropertyDetailPageComponent {
   selectedRoomId: number | null = null;
   showClientProfileFields = false;
   unavailableRoomIds = new Set<number>();
+  readonly today = this.formatDateForInput(new Date());
 
   bookingForm = {
     fechaCheckIn: '',
@@ -122,6 +123,14 @@ export class PropertyDetailPageComponent {
   }
 
   onDateRangeChange() {
+    if (this.bookingForm.fechaCheckIn && this.bookingForm.fechaCheckIn < this.today) {
+      this.bookingForm.fechaCheckIn = this.today;
+    }
+
+    if (this.bookingForm.fechaCheckOut && this.bookingForm.fechaCheckOut <= this.bookingForm.fechaCheckIn) {
+      this.bookingForm.fechaCheckOut = '';
+    }
+
     this.availabilitySearched = false;
     this.selectedRoomId = null;
     this.unavailableRoomIds = new Set<number>();
@@ -239,6 +248,13 @@ export class PropertyDetailPageComponent {
     const end = new Date(checkOut);
     const diffMs = end.getTime() - start.getTime();
     return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  }
+
+  private formatDateForInput(date: Date) {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private submitReservation(
