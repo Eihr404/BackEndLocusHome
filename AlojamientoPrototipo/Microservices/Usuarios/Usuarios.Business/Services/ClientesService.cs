@@ -3,6 +3,7 @@ using Usuarios.Business.Exceptions;
 using Usuarios.Business.Interfaces;
 using Usuarios.Business.Mappers;
 using Usuarios.DataManagement.Interfaces;
+using Usuarios.DataManagement.Models;
 
 namespace Usuarios.Business.Services;
 
@@ -97,10 +98,56 @@ public class ClientesService : IClientesService
 
     public async Task RegistrarClienteAsync(RegistrarClienteRequest request)
     {
-        await _clienteData.RegistrarClienteAsync(
-            request.Email, request.Password, request.NombreCompleto,
-            request.Cedula, request.Telefono, request.Domicilio);
+        var email = request.Email.Trim().ToLowerInvariant();
+        var cedula = request.Cedula.Trim();
+
+        var clientePorEmail = await _clienteData.GetByEmailAsync(email);
+        if (clientePorEmail != null)
+        {
+            throw new InvalidOperationException("Ya existe un cliente registrado con ese correo.");
+        }
+
+        var clientePorCedula = await _clienteData.GetByCedulaAsync(cedula);
+        if (clientePorCedula != null)
+        {
+            throw new InvalidOperationException("Ya existe un cliente registrado con esa cedula.");
+        }
+
+        var usuario = await _usuarioData.GetByEmailAsync(email);
+        if (usuario == null)
+        {
+            usuario = await _usuarioData.CreateAsync(new UsuarioDataModel
+            {
+                Rol = "Cliente",
+                Email = email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                NombreCompleto = request.NombreCompleto.Trim(),
+                Estado = true,
+                FechaCreacion = DateTime.UtcNow,
+            });
+        }
+        else if (!IsBCryptHash(usuario.PasswordHash))
+        {
+            usuario.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            usuario.FechaModificacion = DateTime.UtcNow;
+            await _usuarioData.UpdateAsync(usuario);
+        }
+
+        await _clienteData.CreateAsync(new ClienteDataModel
+        {
+            UsuarioId = usuario.UsuarioId,
+            Cedula = cedula,
+            Telefono = request.Telefono.Trim(),
+            Domicilio = request.Domicilio.Trim(),
+            Email = email,
+            TotalReservas = 0,
+            FechaCreacion = DateTime.UtcNow,
+        });
     }
+
+    private static bool IsBCryptHash(string? value)
+        => !string.IsNullOrWhiteSpace(value) &&
+           (value.StartsWith("$2a$") || value.StartsWith("$2b$") || value.StartsWith("$2y$"));
 
     public async Task ActualizarClienteAsync(int clienteId, ActualizarClienteRequest request)
     {

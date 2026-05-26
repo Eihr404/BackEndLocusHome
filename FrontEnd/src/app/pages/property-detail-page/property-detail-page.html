@@ -2,6 +2,18 @@
 
 <section *ngIf="!loadingProperty && property as detail" class="detail-shell">
   <article class="headline">
+    <div class="gallery-hero" [class.empty]="!coverImageUrl">
+      <img *ngIf="coverImageUrl" [src]="coverImageUrl" [alt]="detail.nombre" />
+      <div *ngIf="!coverImageUrl" class="gallery-fallback">
+        <span>{{ detail.tipoAlojamiento }}</span>
+        <strong>{{ detail.ciudad }}</strong>
+      </div>
+    </div>
+
+    <div class="gallery-strip" *ngIf="photos.length > 1">
+      <img *ngFor="let photo of photos.slice(1, 5)" [src]="photo.url" [alt]="photo.descripcion || detail.nombre" loading="lazy" />
+    </div>
+
     <p class="eyebrow">{{ detail.tipoAlojamiento }} en {{ detail.ciudad }}</p>
     <h1>{{ detail.nombre }}</h1>
     <p>{{ detail.descripcion || detail.direccion }}</p>
@@ -13,6 +25,7 @@
   </article>
 
   <aside class="booking-box">
+    <img *ngIf="coverImageUrl" class="booking-cover" [src]="coverImageUrl" [alt]="detail.nombre" />
     <strong *ngIf="precioMinimo">${{ precioMinimo }} <small>/ noche</small></strong>
     <strong *ngIf="!precioMinimo && !loadingRooms">Ver habitaciones</strong>
     <strong *ngIf="loadingRooms">Cargando...</strong>

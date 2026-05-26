@@ -343,3 +343,11 @@
 127.0.0.1 - - [26/May/2026 01:49:53] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [26/May/2026 01:49:55] "GET / HTTP/1.1" 200 -
 127.0.0.1 - - [26/May/2026 02:23:26] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/May/2026 02:28:09] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/May/2026 02:28:11] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/May/2026 02:28:12] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/May/2026 02:28:12] code 404, message File not found
+127.0.0.1 - - [26/May/2026 02:28:12] "GET /socio/propiedades HTTP/1.1" 404 -
+127.0.0.1 - - [26/May/2026 02:28:12] "GET /favicon.ico HTTP/1.1" 200 -
+127.0.0.1 - - [26/May/2026 02:28:12] code 404, message File not found
+127.0.0.1 - - [26/May/2026 02:28:12] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 -

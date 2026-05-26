@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { AlojamientoCard, Habitacion } from '../../models/alojamiento.model';
+import { AlojamientoCard, FotoAlojamiento, Habitacion } from '../../models/alojamiento.model';
 import { ReservaAlojamientoDetalle } from '../../models/reserva.model';
 import { AuthService } from '../../services/auth.service';
 import { AlojamientosService } from '../../services/alojamientos.service';
@@ -24,10 +24,12 @@ export class PropertyDetailPageComponent {
   private readonly cdr = inject(ChangeDetectorRef);
 
   property: AlojamientoCard | null = null;
+  photos: FotoAlojamiento[] = [];
   rooms: Habitacion[] = [];
   reservationsByProperty: ReservaAlojamientoDetalle[] = [];
   loadingProperty = true;
   loadingRooms = true;
+  loadingPhotos = true;
   availabilityLoading = false;
   availabilitySearched = false;
   bookingMessage = '';
@@ -58,10 +60,12 @@ export class PropertyDetailPageComponent {
       const id = Number(params.get('id'));
       if (!id) {
         this.property = null;
+        this.photos = [];
         this.rooms = [];
         this.reservationsByProperty = [];
         this.loadingProperty = false;
         this.loadingRooms = false;
+        this.loadingPhotos = false;
         this.availabilityLoading = false;
         this.unavailableRoomIds = new Set<number>();
         this.cdr.detectChanges();
@@ -70,6 +74,7 @@ export class PropertyDetailPageComponent {
 
       this.loadingProperty = true;
       this.loadingRooms = true;
+      this.loadingPhotos = true;
       this.availabilityLoading = false;
       this.availabilitySearched = false;
       this.bookingMessage = '';
@@ -78,6 +83,7 @@ export class PropertyDetailPageComponent {
       this.showClientProfileFields = false;
       this.unavailableRoomIds = new Set<number>();
       this.reservationsByProperty = [];
+      this.photos = [];
 
       this.alojamientosService.getById(id).subscribe((property) => {
         this.property = property;
@@ -97,7 +103,26 @@ export class PropertyDetailPageComponent {
           this.cdr.detectChanges();
         },
       });
+
+      this.alojamientosService.getPhotosByProperty(id).subscribe({
+        next: (photos) => {
+          this.photos = photos;
+          if (this.property && photos[0]?.url) {
+            this.property = { ...this.property, imagenUrl: photos[0].url };
+          }
+          this.loadingPhotos = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.loadingPhotos = false;
+          this.cdr.detectChanges();
+        },
+      });
     });
+  }
+
+  get coverImageUrl() {
+    return this.photos[0]?.url ?? this.property?.imagenUrl ?? '';
   }
 
   get precioMinimo(): number | null {

@@ -14,7 +14,9 @@
 <section class="cards" *ngIf="!loading; else loadingTpl">
   <p *ngIf="!properties.length" class="loading">No hay alojamientos disponibles por el momento.</p>
   <article class="property-card" *ngFor="let property of properties">
-    <div class="poster">
+    <div class="poster" [class.has-image]="property.imagenUrl">
+      <img *ngIf="property.imagenUrl" [src]="property.imagenUrl" [alt]="property.nombre" loading="lazy" />
+      <div class="poster-overlay"></div>
       <span>{{ property.tipoAlojamiento }}</span>
       <strong>{{ property.ciudad }}</strong>
     </div>

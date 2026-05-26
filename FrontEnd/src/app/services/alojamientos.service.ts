@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, map, of } from 'rxjs';
+import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 
 import {
   AlojamientoCard,
@@ -12,7 +12,12 @@ import {
   TipoAlojamientoOption,
 } from '../models/alojamiento.model';
 import { ApiEnvelope } from '../models/api-response.model';
-import { ALOJAMIENTOS_API_BASE_URL, PARTNER_API_BASE_URL } from './api.config';
+import {
+  ALOJAMIENTOS_API_BASE_URL,
+  CLOUDINARY_DIRECT_UPLOAD_URL,
+  CLOUDINARY_UPLOAD_PRESET,
+  PARTNER_API_BASE_URL,
+} from './api.config';
 
 const MOCK_ALOJAMIENTOS: AlojamientoCard[] = [
   {
@@ -123,6 +128,7 @@ export class AlojamientosService {
           if (raw.length > 0) console.log("[AlojamientosService] primer alojamiento crudo:", JSON.stringify(raw[0]));
           return raw.map((item) => this.normalizeProperty(item));
         }),
+        switchMap((items) => this.attachCoverPhotos(items)),
         map((items) => this.applyLocalFilters(items, filters)),
         catchError(() => of(this.applyLocalFilters(MOCK_ALOJAMIENTOS, filters))),
       );
@@ -273,14 +279,24 @@ export class AlojamientosService {
 
   uploadPhotoFileViaCloudinary(form: FotoAlojamientoForm, file: File) {
     const payload = new FormData();
-    payload.append('alojamientoId', `${form.alojamientoId}`);
-    payload.append('archivo', file, file.name);
-    payload.append('orden', `${form.orden ?? 0}`);
-    payload.append('descripcion', form.descripcion || '');
+    payload.append('file', file, file.name);
+    payload.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-    return this.http
-      .post<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos/cloudinary/archivo`, payload)
-      .pipe(map((photo) => this.normalizePhoto(photo)));
+    return this.http.post<unknown>(CLOUDINARY_DIRECT_UPLOAD_URL, payload).pipe(
+      map((response) => this.extractCloudinarySecureUrl(response)),
+      switchMap((secureUrl) => {
+        const photoPayload = {
+          alojamientoId: form.alojamientoId,
+          url: secureUrl,
+          orden: form.orden ?? 0,
+          descripcion: form.descripcion || null,
+        };
+
+        return this.http
+          .post<unknown>(`${ALOJAMIENTOS_API_BASE_URL}/Fotos`, photoPayload)
+          .pipe(map((photo) => this.normalizePhoto(photo)));
+      }),
+    );
   }
 
   deletePhoto(fotoId: number) {
@@ -390,6 +406,7 @@ export class AlojamientosService {
       tieneParqueadero: item.tieneParqueadero ?? item.TieneParqueadero ?? false,
       disponible: item.disponible ?? statusValue !== 'inactivo',
       estado: item.estado ?? item.Estado,
+      imagenUrl: item.imagenUrl ?? item.ImagenUrl ?? item.urlFotoPrincipal ?? item.UrlFotoPrincipal,
     };
   }
 
@@ -420,6 +437,38 @@ export class AlojamientosService {
       orden: Number(photo.orden ?? photo.Orden ?? 0) || 0,
       descripcion: photo.descripcion ?? photo.Descripcion ?? null,
     };
+  }
+
+  private attachCoverPhotos(items: AlojamientoCard[]) {
+    if (!items.length) {
+      return of(items);
+    }
+
+    return forkJoin(
+      items.map((item) =>
+        this.getPhotosByProperty(item.alojamientoId).pipe(
+          map((photos) => ({
+            ...item,
+            imagenUrl: photos[0]?.url || item.imagenUrl,
+          })),
+          catchError(() => of(item)),
+        ),
+      ),
+    );
+  }
+
+  private extractCloudinarySecureUrl(response: unknown) {
+    if (!response || typeof response !== 'object') {
+      throw new Error('Cloudinary no devolvio una respuesta valida.');
+    }
+
+    const payload = response as { secure_url?: string; url?: string };
+    const secureUrl = payload.secure_url ?? payload.url ?? '';
+    if (!secureUrl) {
+      throw new Error('Cloudinary no devolvio la URL de la imagen.');
+    }
+
+    return secureUrl;
   }
 
   private extractTypesFromProperties(items: unknown[]) {
