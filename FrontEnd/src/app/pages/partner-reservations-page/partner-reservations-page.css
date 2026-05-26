@@ -25,4 +25,18 @@
 
 .status-block {
   text-align: right;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
+@media (max-width: 720px) {
+  .reservation-row {
+    flex-direction: column;
+  }
+
+  .status-block {
+    justify-items: start;
+    text-align: left;
+  }
 }

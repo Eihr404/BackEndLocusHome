@@ -18,10 +18,74 @@
       <strong>{{ reservation.alojamientoNombre }}</strong>
       <p>{{ reservation.fechaEntrada }} a {{ reservation.fechaSalida }}</p>
       <small>{{ reservation.codigoReserva }}</small>
+      <small *ngIf="invoiceByReservationId[reservation.reservaId]?.existe">
+        Factura #{{ invoiceByReservationId[reservation.reservaId].facturaId }} ·
+        {{ invoiceByReservationId[reservation.reservaId].estado }}
+      </small>
     </div>
     <div class="amount">
       <span>{{ reservation.estado }}</span>
       <strong>${{ reservation.total }} {{ reservation.moneda }}</strong>
+      <button
+        *ngIf="canPay(reservation)"
+        type="button"
+        class="pay-btn"
+        (click)="openPayment(reservation)">
+        Pagar
+      </button>
+      <span *ngIf="!canPay(reservation)" class="paid-badge">Pago completado</span>
     </div>
   </article>
+
+  <section *ngIf="activePaymentReservationId as activeId" class="payment-panel">
+    <div *ngFor="let reservation of reservations">
+      <div *ngIf="reservation.reservaId === activeId">
+        <div class="payment-header">
+          <div>
+            <strong>Pagar {{ reservation.alojamientoNombre }}</strong>
+            <p>Reserva {{ reservation.codigoReserva || ('#' + reservation.reservaId) }}</p>
+          </div>
+          <button type="button" class="close-btn" (click)="closePayment()">Cerrar</button>
+        </div>
+
+        <label>
+          Monto a facturar
+          <input [value]="reservation.total" type="number" readonly />
+        </label>
+
+        <label>
+          Fecha de pago
+          <input [(ngModel)]="paymentForm.fechaPago" type="date" name="fechaPago" />
+        </label>
+
+        <label>
+          Metodo de pago
+          <select [(ngModel)]="paymentForm.metodoPagoId" name="metodoPagoId">
+            <option [ngValue]="null">Sin metodo especificado</option>
+            <option *ngFor="let method of paymentMethods" [ngValue]="method.metodoPagoId">
+              {{ method.nombre }}
+            </option>
+          </select>
+        </label>
+
+        <p *ngIf="loadingPaymentMethods" class="helper-text">Cargando metodos de pago...</p>
+        <p *ngIf="!loadingPaymentMethods && !paymentMethods.length" class="helper-text">
+          No hay metodos de pago publicados en la API. La factura se emitira sin metodo especificado.
+        </p>
+
+        <p *ngIf="paymentError" class="payment-error">{{ paymentError }}</p>
+        <p *ngIf="paymentMessage" class="payment-success">{{ paymentMessage }}</p>
+
+        <div class="payment-actions">
+          <button
+            type="button"
+            class="pay-btn"
+            (click)="submitPayment(reservation)"
+            [disabled]="paymentLoadingReservationId === reservation.reservaId">
+            {{ paymentLoadingReservationId === reservation.reservaId ? 'Procesando...' : 'Confirmar pago' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </section>

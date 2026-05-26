@@ -2,14 +2,20 @@
   <p class="eyebrow">Operaciones del socio</p>
   <h1>Reservas recibidas</h1>
 
-  <article class="reservation-row" *ngFor="let reservation of reservations$ | async">
+  <p *ngIf="loading">Cargando reservas de tus alojamientos...</p>
+  <p *ngIf="!loading && message">{{ message }}</p>
+  <p *ngIf="!loading && !message && !reservations.length">Todavia no hay reservas en tus alojamientos.</p>
+
+  <article class="reservation-row" *ngFor="let reservation of reservations">
     <div>
-      <strong>{{ reservation.clienteNombre }}</strong>
-      <p>{{ reservation.alojamientoNombre }}</p>
+      <strong>{{ reservation.alojamientoNombre }}</strong>
+      <p>{{ reservation.clienteNombre }}</p>
+      <small>{{ reservation.fechaEntrada }} a {{ reservation.fechaSalida }}</small>
     </div>
     <div class="status-block">
+      <small>{{ reservation.codigoReserva }}</small>
       <span>{{ reservation.estado }}</span>
-      <strong>${{ reservation.total }}</strong>
+      <strong>${{ reservation.total }} {{ reservation.moneda }}</strong>
     </div>
   </article>
 </section>

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, map, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 
 import { CrearReservaRequest, ReservaCreada, ReservaResumen } from '../models/reserva.model';
 import { API_GATEWAY_BASE_URL, RESERVAS_API_BASE_URL } from './api.config';
@@ -35,30 +35,34 @@ export class ReservasService {
   private readonly http = inject(HttpClient);
 
   getByCliente(clienteId: number | null | undefined, options?: { demoMode?: boolean }) {
-    console.log("[ReservasService] getByCliente llamado con clienteId:", clienteId);
+    console.log('[ReservasService] getByCliente clienteId:', clienteId);
     if (!clienteId) {
+      console.warn('[ReservasService] clienteId es null — no se cargan reservas');
       return of<ReservaResumen[]>([]);
     }
 
+    // Llamar directo al microservicio (más confiable que el gateway en Render)
     return this.http
-      .get<unknown>(`${API_GATEWAY_BASE_URL}/booking/resumen/cliente/${clienteId}`)
+      .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/cliente/${clienteId}`)
       .pipe(
-        map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
-        catchError(() =>
-          this.http
-            .get<unknown>(`${API_GATEWAY_BASE_URL}/booking/cliente/${clienteId}`)
+        map((response) => {
+          console.log('[ReservasService] respuesta cruda:', JSON.stringify(response));
+          const items = this.unwrapCollection(response).map((item) => this.normalizeReservation(item));
+          console.log('[ReservasService] normalizadas:', items);
+          return items;
+        }),
+        catchError((err) => {
+          console.error('[ReservasService] microservicio falló, intentando gateway:', err.status);
+          return this.http
+            .get<unknown>(`${API_GATEWAY_BASE_URL}/booking/resumen/cliente/${clienteId}`)
             .pipe(
               map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
-              catchError(() =>
-                this.http
-                  .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/cliente/${clienteId}`)
-                  .pipe(
-                    map((response) => this.unwrapCollection(response).map((item) => this.normalizeReservation(item))),
-                    catchError(() => of(options?.demoMode && clienteId === 1 ? MOCK_RESERVAS : [])),
-                  ),
-              ),
-            ),
-        ),
+              catchError((err2) => {
+                console.error('[ReservasService] gateway también falló:', err2.status);
+                return of<ReservaResumen[]>([]);
+              }),
+            );
+        }),
       );
   }
 
@@ -66,10 +70,48 @@ export class ReservasService {
     return of(MOCK_RESERVAS);
   }
 
+  getByAlojamiento(alojamientoId: number, alojamientoNombre?: string) {
+    return this.http
+      .get<unknown>(`${RESERVAS_API_BASE_URL}/Reservas/resumen/alojamiento/${alojamientoId}`)
+      .pipe(
+        map((response) =>
+          this.unwrapCollection(response).map((item) =>
+            this.normalizeReservation(item, { alojamientoId, alojamientoNombre }),
+          ),
+        ),
+      );
+  }
+
+  getByAlojamientos(items: Array<{ alojamientoId: number; nombre?: string }>) {
+    if (!items.length) {
+      return of<ReservaResumen[]>([]);
+    }
+
+    return forkJoin(
+      items.map((item) =>
+        this.getByAlojamiento(item.alojamientoId, item.nombre).pipe(catchError(() => of<ReservaResumen[]>([]))),
+      ),
+    ).pipe(
+      map((groups) =>
+        groups
+          .flat()
+          .sort((left, right) => {
+            const leftDate = Date.parse(left.fechaEntrada || '');
+            const rightDate = Date.parse(right.fechaEntrada || '');
+            return Number.isNaN(rightDate) || Number.isNaN(leftDate) ? right.reservaId - left.reservaId : rightDate - leftDate;
+          }),
+      ),
+    );
+  }
+
   createReservation(payload: CrearReservaRequest) {
     return this.http
       .post<unknown>(`${API_GATEWAY_BASE_URL}/booking`, payload)
       .pipe(map((response) => this.normalizeCreatedReservation(response)));
+  }
+
+  updateReservationStatus(reservaId: number, estado: string) {
+    return this.http.patch(`${RESERVAS_API_BASE_URL}/Reservas/${reservaId}/estado`, { estado });
   }
 
   private unwrapCollection(response: unknown) {
@@ -117,8 +159,11 @@ export class ReservasService {
     return [];
   }
 
-  private normalizeReservation(item: any): ReservaResumen {
-    const alojamientoId = item.alojamientoId ?? item.AlojamientoId ?? 0;
+  private normalizeReservation(
+    item: any,
+    context?: { alojamientoId?: number; alojamientoNombre?: string },
+  ): ReservaResumen {
+    const alojamientoId = item.alojamientoId ?? item.AlojamientoId ?? context?.alojamientoId ?? 0;
     const clienteId = item.clienteId ?? item.ClienteId ?? 0;
 
     return {
@@ -127,6 +172,7 @@ export class ReservasService {
       alojamientoNombre:
         item.alojamientoNombre ??
         item.AlojamientoNombre ??
+        context?.alojamientoNombre ??
         `Alojamiento #${alojamientoId}`,
       clienteNombre:
         item.clienteNombre ??

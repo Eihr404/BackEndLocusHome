@@ -86,6 +86,12 @@ export class PropertyDetailPageComponent {
     });
   }
 
+  get precioMinimo(): number | null {
+    if (!this.rooms.length) return null;
+    const precios = this.rooms.map(r => r.precioNoche).filter(p => p > 0);
+    return precios.length ? Math.min(...precios) : null;
+  }
+
   selectRoom(room: Habitacion) {
     this.selectedRoomId = room.habitacionId;
   }

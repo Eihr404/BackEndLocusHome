@@ -36,4 +36,91 @@
 
 .amount {
   text-align: right;
+  display: grid;
+  gap: 0.65rem;
+  justify-items: end;
+}
+
+.pay-btn,
+.close-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  background: #17312d;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pay-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.paid-badge {
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: #e5f4eb;
+  color: #1f5d39;
+}
+
+.payment-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.3rem 1.5rem;
+  border-radius: 1.5rem;
+  background: rgba(255, 249, 242, 0.92);
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.payment-panel label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.payment-panel input,
+.payment-panel select {
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(23, 49, 45, 0.18);
+  font: inherit;
+}
+
+.payment-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.helper-text,
+.payment-error,
+.payment-success {
+  margin: 0;
+}
+
+.payment-error {
+  color: #7d2d20;
+}
+
+.payment-success {
+  color: #1f5d39;
+}
+
+@media (max-width: 720px) {
+  .reservation-card,
+  .payment-header {
+    flex-direction: column;
+  }
+
+  .amount,
+  .payment-actions {
+    justify-items: start;
+    justify-content: flex-start;
+  }
 }

@@ -45,6 +45,18 @@ public class ReservasService : IReservasService
         return reservas.Select(ReservasBusinessMapper.ToResumenResponse);
     }
 
+    public async Task<IEnumerable<ReservaResponse>> GetByAlojamientoIdAsync(int alojamientoId)
+    {
+        var reservas = await _reservasDataService.GetByAlojamientoIdAsync(alojamientoId);
+        return reservas.Select(ReservasBusinessMapper.ToResponse);
+    }
+
+    public async Task<IEnumerable<ReservaResumenResponse>> GetResumenByAlojamientoIdAsync(int alojamientoId)
+    {
+        var reservas = await _reservasDataService.GetByAlojamientoIdAsync(alojamientoId);
+        return reservas.Select(ReservasBusinessMapper.ToResumenResponse);
+    }
+
     public async Task<ReservaResponse> CrearAsync(CrearReservaRequest request)
     {
         // 1. Validación de fechas

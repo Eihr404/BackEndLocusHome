@@ -7,13 +7,15 @@
     <p>{{ detail.descripcion || detail.direccion }}</p>
     <div class="tags">
       <span>{{ detail.estrellas }} estrellas</span>
-      <span>{{ detail.moneda }} {{ detail.precioNocheMinimo }} base</span>
+      <span *ngIf="precioMinimo">${{ precioMinimo }} / noche desde</span>
       <span *ngIf="detail.disponible">Disponible</span>
     </div>
   </article>
 
   <aside class="booking-box">
-    <strong>${{ detail.precioNocheMinimo }}</strong>
+    <strong *ngIf="precioMinimo">${{ precioMinimo }} <small>/ noche</small></strong>
+    <strong *ngIf="!precioMinimo && !loadingRooms">Ver habitaciones</strong>
+    <strong *ngIf="loadingRooms">Cargando...</strong>
     <small>Precio referencial por noche</small>
 
     <label>

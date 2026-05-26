@@ -27,7 +27,8 @@
         <span *ngIf="property.admiteMascotas">Pet friendly</span>
       </div>
       <div class="footer">
-        <strong>${{ property.precioNocheMinimo }} <small>/ noche</small></strong>
+        <strong *ngIf="property.precioNocheMinimo > 0">${{ property.precioNocheMinimo }} <small>/ noche</small></strong>
+        <strong *ngIf="!property.precioNocheMinimo || property.precioNocheMinimo === 0">Ver precio en detalle</strong>
         <a [routerLink]="['/alojamientos', property.alojamientoId]">Ver detalle</a>
       </div>
     </div>
