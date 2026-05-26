@@ -35,6 +35,7 @@ export class ReservasService {
   private readonly http = inject(HttpClient);
 
   getByCliente(clienteId: number | null | undefined, options?: { demoMode?: boolean }) {
+    console.log("[ReservasService] getByCliente llamado con clienteId:", clienteId);
     if (!clienteId) {
       return of<ReservaResumen[]>([]);
     }

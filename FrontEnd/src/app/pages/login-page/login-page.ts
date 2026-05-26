@@ -17,7 +17,7 @@ export class LoginPageComponent {
   private readonly router = inject(Router);
 
   email = '';
-  password = '';
+  password = ''
   info = 'Accede con un usuario real registrado en la API.';
   error = '';
   loading = false;
@@ -28,8 +28,30 @@ export class LoginPageComponent {
 
     this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (session) => {
-        this.loading = false;
-        void this.router.navigateByUrl(session.role === 'socio' ? '/socio' : '/explorar');
+        // Si es cliente y no tiene clienteId, buscarlo en el microservicio de clientes
+        if (session.role === 'cliente' && !session.clienteId) {
+          this.authService
+            .ensureClientProfile({
+              usuarioId: session.usuarioId ?? 0,
+              email: session.email,
+              nombreCompleto: session.nombreCompleto ?? session.email,
+            })
+            .subscribe({
+              next: () => {
+                this.loading = false;
+                void this.router.navigateByUrl('/explorar');
+              },
+              error: () => {
+                // Aunque falle, dejamos pasar — tendrá reservas vacías pero puede navegar
+                console.warn('[Login] No se pudo obtener clienteId, reservas no disponibles');
+                this.loading = false;
+                void this.router.navigateByUrl('/explorar');
+              },
+            });
+        } else {
+          this.loading = false;
+          void this.router.navigateByUrl(session.role === 'socio' ? '/socio' : '/explorar');
+        }
       },
       error: (error: HttpErrorResponse) => {
         this.loading = false;
