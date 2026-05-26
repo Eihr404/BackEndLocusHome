@@ -12,18 +12,18 @@ public class ReservasService : IReservasService
     private readonly IReservasDataService _reservasDataService;
     private readonly IDescuentosDataService _descuentosDataService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly Shared.Protos.CalendarioGrpc.CalendarioGrpcClient _calendarioGrpcClient;
+    private readonly ICalendarioGateway _calendarioGateway;
 
     public ReservasService(
         IReservasDataService reservasDataService,
         IDescuentosDataService descuentosDataService,
         IUnitOfWork unitOfWork,
-        Shared.Protos.CalendarioGrpc.CalendarioGrpcClient calendarioGrpcClient)
+        ICalendarioGateway calendarioGateway)
     {
         _reservasDataService = reservasDataService;
         _descuentosDataService = descuentosDataService;
         _unitOfWork = unitOfWork;
-        _calendarioGrpcClient = calendarioGrpcClient;
+        _calendarioGateway = calendarioGateway;
     }
 
     public async Task<ReservaResponse> GetByIdAsync(int id)
@@ -59,11 +59,9 @@ public class ReservasService : IReservasService
 
     public async Task<ReservaResponse> CrearAsync(CrearReservaRequest request)
     {
-        // 1. Validación de fechas
         if (request.FechaCheckOut <= request.FechaCheckIn)
             throw new FechasInvalidasException("La fecha de CheckOut debe ser posterior al CheckIn.");
 
-        // 2. Validación de Descuento
         DescuentoDataModel? descuento = null;
         if (!string.IsNullOrEmpty(request.CodigoDescuento))
         {
@@ -72,40 +70,32 @@ public class ReservasService : IReservasService
                 throw new DescuentoInvalidoException(request.CodigoDescuento);
         }
 
-        // 3. Verificación de Disponibilidad vía gRPC (Sincrónico y Rápido)
-        foreach (var habReq in request.Habitaciones)
+        foreach (var habitacionRequest in request.Habitaciones)
         {
-            var disponibilidad = await _calendarioGrpcClient.VerificarDisponibilidadAsync(new Shared.Protos.DisponibilidadRequest
-            {
-                HabitacionId = habReq.HabitacionId,
-                FechaInicio = request.FechaCheckIn.ToString("yyyy-MM-dd"),
-                FechaFin = request.FechaCheckOut.ToString("yyyy-MM-dd")
-            });
-
-            if (!disponibilidad.Disponible)
-            {
-                throw new BusinessRuleException($"Habitación {habReq.HabitacionId} no disponible: {disponibilidad.Mensaje}");
-            }
+            await _calendarioGateway.VerificarDisponibilidadAsync(
+                habitacionRequest.HabitacionId,
+                request.FechaCheckIn,
+                request.FechaCheckOut);
         }
 
-        // 4. Generación de detalles y subtotal
         var detalles = new List<ReservaDetalleHabitacionDataModel>();
         decimal subTotal = 0;
 
-        foreach (var req in request.Habitaciones)
+        foreach (var habitacionRequest in request.Habitaciones)
         {
-            var subTotalHab = req.PrecioPorNoche * req.NumNoches;
+            var subTotalHabitacion = habitacionRequest.PrecioPorNoche * habitacionRequest.NumNoches;
+
             detalles.Add(new ReservaDetalleHabitacionDataModel
             {
-                HabitacionId = req.HabitacionId,
-                PrecioPorNoche = req.PrecioPorNoche,
-                NumNoches = req.NumNoches,
-                SubTotalHabitacion = subTotalHab
+                HabitacionId = habitacionRequest.HabitacionId,
+                PrecioPorNoche = habitacionRequest.PrecioPorNoche,
+                NumNoches = habitacionRequest.NumNoches,
+                SubTotalHabitacion = subTotalHabitacion
             });
-            subTotal += subTotalHab;
+
+            subTotal += subTotalHabitacion;
         }
 
-        // 4. Cálculo del total con descuento
         decimal total = subTotal;
         if (descuento != null)
         {
@@ -113,7 +103,6 @@ public class ReservasService : IReservasService
             total -= montoDescuento;
         }
 
-        // 5. Preparar modelo de datos
         var model = new ReservaDataModel
         {
             ClienteId = request.ClienteId,
@@ -132,31 +121,20 @@ public class ReservasService : IReservasService
             DetallesHabitacion = detalles
         };
 
-        // 6. Transacción
         await _unitOfWork.BeginTransactionAsync();
         try
         {
             var created = await _reservasDataService.CreateAsync(model);
 
-            foreach (var habReq in request.Habitaciones)
+            foreach (var habitacionRequest in request.Habitaciones)
             {
-                var bloqueo = await _calendarioGrpcClient.BloquearFechasAsync(new Shared.Protos.BloqueoFechasRequest
-                {
-                    HabitacionId = habReq.HabitacionId,
-                    FechaInicio = request.FechaCheckIn.ToString("yyyy-MM-dd"),
-                    FechaFin = request.FechaCheckOut.ToString("yyyy-MM-dd")
-                });
-
-                if (!bloqueo.Exito)
-                {
-                    throw new BusinessRuleException(
-                        $"No fue posible bloquear la disponibilidad de la habitación {habReq.HabitacionId}: {bloqueo.Mensaje}");
-                }
+                await _calendarioGateway.BloquearFechasAsync(
+                    habitacionRequest.HabitacionId,
+                    request.FechaCheckIn,
+                    request.FechaCheckOut);
             }
 
             await _unitOfWork.CommitTransactionAsync();
-            
-            // TODO: Publicar evento a RabbitMQ -> ReservaCreadaEvent
 
             return await GetByIdAsync(created.ReservaId);
         }
@@ -170,7 +148,5 @@ public class ReservasService : IReservasService
     public async Task ActualizarEstadoAsync(int id, ActualizarEstadoReservaRequest request)
     {
         await _reservasDataService.UpdateStatusAsync(id, request.Estado);
-        
-        // TODO: Publicar evento a RabbitMQ -> EstadoReservaActualizadoEvent
     }
 }

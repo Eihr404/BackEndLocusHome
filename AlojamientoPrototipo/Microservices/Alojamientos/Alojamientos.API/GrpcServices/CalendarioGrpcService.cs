@@ -60,12 +60,38 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
         }
     }
 
-    public override async Task<BloqueoFechasResponse> BloquearFechas(BloqueoFechasRequest request, ServerCallContext context)
+    public override async Task<global::Shared.Protos.BloqueoFechasResponse> BloquearFechas(
+        global::Shared.Protos.BloqueoFechasRequest request,
+        ServerCallContext context)
     {
         try
         {
-            var fechaInicio = DateOnly.Parse(request.FechaInicio);
-            var fechaFin = DateOnly.Parse(request.FechaFin);
+            if (!DateOnly.TryParse(request.FechaInicio, out var fechaInicio))
+            {
+                return new global::Shared.Protos.BloqueoFechasResponse
+                {
+                    Exito = false,
+                    Mensaje = $"FechaInicio invalida: {request.FechaInicio}"
+                };
+            }
+
+            if (!DateOnly.TryParse(request.FechaFin, out var fechaFin))
+            {
+                return new global::Shared.Protos.BloqueoFechasResponse
+                {
+                    Exito = false,
+                    Mensaje = $"FechaFin invalida: {request.FechaFin}"
+                };
+            }
+
+            if (fechaFin <= fechaInicio)
+            {
+                return new global::Shared.Protos.BloqueoFechasResponse
+                {
+                    Exito = false,
+                    Mensaje = "La fecha de salida debe ser posterior a la fecha de entrada."
+                };
+            }
 
             await _calendarioService.BloquearFechasAsync(new Alojamientos.Business.DTOs.BloquearFechasRequest
             {
@@ -74,7 +100,7 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
                 FechaFin = fechaFin.AddDays(-1)
             });
 
-            return new BloqueoFechasResponse
+            return new global::Shared.Protos.BloqueoFechasResponse
             {
                 Exito = true,
                 Mensaje = "Fechas bloqueadas correctamente."
@@ -83,7 +109,7 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al bloquear fechas por gRPC");
-            return new BloqueoFechasResponse
+            return new global::Shared.Protos.BloqueoFechasResponse
             {
                 Exito = false,
                 Mensaje = ex.Message
