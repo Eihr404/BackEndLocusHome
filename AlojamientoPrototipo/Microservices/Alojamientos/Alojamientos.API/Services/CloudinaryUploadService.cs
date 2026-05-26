@@ -16,12 +16,14 @@ public class CloudinaryUploadService : ICloudinaryUploadService
     private readonly HttpClient _httpClient;
     private readonly ILogger<CloudinaryUploadService> _logger;
     private readonly CloudinaryCredentials _credentials;
+    private readonly string? _uploadPreset;
 
     public CloudinaryUploadService(HttpClient httpClient, ILogger<CloudinaryUploadService> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
         _credentials = CloudinaryCredentials.Parse(Environment.GetEnvironmentVariable("CLOUDINARY_URL"));
+        _uploadPreset = NormalizeOptionalEnvironmentValue(Environment.GetEnvironmentVariable("CLOUDINARY_UPLOAD_PRESET"));
     }
 
     public async Task<string> UploadImageFromUrlAsync(string sourceUrl, CancellationToken cancellationToken = default)
@@ -32,11 +34,10 @@ public class CloudinaryUploadService : ICloudinaryUploadService
 
         using var content = new MultipartFormDataContent
         {
-            { new StringContent(sourceUrl), "file" },
-            { new StringContent(_credentials.ApiKey), "api_key" },
-            { new StringContent(timestamp), "timestamp" },
-            { new StringContent(signature), "signature" }
+            { new StringContent(sourceUrl), "file" }
         };
+
+        AddCloudinaryAuthFields(content, timestamp, signature);
 
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
         var payload = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -72,11 +73,10 @@ public class CloudinaryUploadService : ICloudinaryUploadService
 
         using var content = new MultipartFormDataContent
         {
-            { fileContent, "file", string.IsNullOrWhiteSpace(fileName) ? "upload.bin" : fileName },
-            { new StringContent(_credentials.ApiKey), "api_key" },
-            { new StringContent(timestamp), "timestamp" },
-            { new StringContent(signature), "signature" }
+            { fileContent, "file", string.IsNullOrWhiteSpace(fileName) ? "upload.bin" : fileName }
         };
+
+        AddCloudinaryAuthFields(content, timestamp, signature);
 
         using var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
         var payload = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -101,6 +101,31 @@ public class CloudinaryUploadService : ICloudinaryUploadService
         var toSign = $"timestamp={timestamp}{apiSecret}";
         var bytes = SHA1.HashData(Encoding.UTF8.GetBytes(toSign));
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private void AddCloudinaryAuthFields(MultipartFormDataContent content, string timestamp, string signature)
+    {
+        if (!string.IsNullOrWhiteSpace(_uploadPreset))
+        {
+            _logger.LogInformation("Cloudinary upload is using CLOUDINARY_UPLOAD_PRESET.");
+            content.Add(new StringContent(_uploadPreset), "upload_preset");
+            return;
+        }
+
+        _logger.LogInformation("Cloudinary upload is using signed CLOUDINARY_URL credentials.");
+        content.Add(new StringContent(_credentials.ApiKey), "api_key");
+        content.Add(new StringContent(timestamp), "timestamp");
+        content.Add(new StringContent(signature), "signature");
+    }
+
+    private static string? NormalizeOptionalEnvironmentValue(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return value.Trim().Trim('"', '\'');
     }
 
     private sealed record CloudinaryUploadResponse
