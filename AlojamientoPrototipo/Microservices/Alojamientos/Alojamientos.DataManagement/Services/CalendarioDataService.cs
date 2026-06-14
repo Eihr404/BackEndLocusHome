@@ -40,6 +40,22 @@ public class CalendarioDataService : ICalendarioDataService
         return entities.Select(AlojamientosMapper.ToDataModel);
     }
 
+    public async Task<IEnumerable<CalendarioDisponibilidadDataModel>> DeleteRangeAsync(int habitacionId, DateOnly fechaInicio, DateOnly fechaFin, string estado)
+    {
+        var entities = (await _repository.FindAsync(c =>
+            c.HabitacionId == habitacionId &&
+            c.Fecha >= fechaInicio &&
+            c.Fecha <= fechaFin &&
+            c.Estado == estado)).ToList();
+
+        foreach (var entity in entities)
+        {
+            await _repository.DeleteAsync(entity);
+        }
+
+        return entities.Select(AlojamientosMapper.ToDataModel);
+    }
+
     public async Task<bool> ExistsBloqueoOcupacionAsync(int habitacionId, DateOnly fechaInicio, DateOnly fechaFin)
     {
         var entities = await _repository.FindAsync(c => 

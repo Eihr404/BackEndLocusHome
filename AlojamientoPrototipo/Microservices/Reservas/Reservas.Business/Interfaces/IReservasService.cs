@@ -11,4 +11,6 @@ public interface IReservasService
     Task<IEnumerable<ReservaResumenResponse>> GetResumenByAlojamientoIdAsync(int alojamientoId);
     Task<ReservaResponse> CrearAsync(CrearReservaRequest request);
     Task ActualizarEstadoAsync(int id, ActualizarEstadoReservaRequest request);
+    Task<bool> ConfirmarReservaPorPagoAsync(int reservaId);
+    Task<bool> CancelarReservaPorPagoRechazadoAsync(int reservaId, string motivo);
 }

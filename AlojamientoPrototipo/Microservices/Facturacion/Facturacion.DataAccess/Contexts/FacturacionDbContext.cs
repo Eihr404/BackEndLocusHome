@@ -12,6 +12,7 @@ public class FacturacionDbContext : DbContext
     public DbSet<FacturaEntity> Facturas { get; set; } = null!;
     public DbSet<DetalleFacturaEntity> DetallesFactura { get; set; } = null!;
     public DbSet<AuditoriaGeneralEntity> Auditoria { get; set; } = null!;
+    public DbSet<IdempotentRequestEntity> IdempotentRequests { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -19,5 +20,6 @@ public class FacturacionDbContext : DbContext
         modelBuilder.ApplyConfiguration(new FacturaConfiguration());
         modelBuilder.ApplyConfiguration(new DetalleFacturaConfiguration());
         modelBuilder.ApplyConfiguration(new AuditoriaGeneralConfiguration());
+        modelBuilder.ApplyConfiguration(new IdempotentRequestConfiguration());
     }
 }

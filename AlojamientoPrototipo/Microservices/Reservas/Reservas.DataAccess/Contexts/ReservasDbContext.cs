@@ -11,11 +11,15 @@ public class ReservasDbContext : DbContext
     public DbSet<ReservaEntity> Reservas { get; set; } = null!;
     public DbSet<DescuentoEntity> Descuentos { get; set; } = null!;
     public DbSet<ReservaDetalleHabitacionEntity> DetallesHabitacion { get; set; } = null!;
+    public DbSet<ProcessedMessageEntity> ProcessedMessages { get; set; } = null!;
+    public DbSet<IdempotentRequestEntity> IdempotentRequests { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new ReservaConfiguration());
         modelBuilder.ApplyConfiguration(new DescuentoConfiguration());
         modelBuilder.ApplyConfiguration(new ReservaDetalleHabitacionConfiguration());
+        modelBuilder.ApplyConfiguration(new ProcessedMessageConfiguration());
+        modelBuilder.ApplyConfiguration(new IdempotentRequestConfiguration());
     }
 }

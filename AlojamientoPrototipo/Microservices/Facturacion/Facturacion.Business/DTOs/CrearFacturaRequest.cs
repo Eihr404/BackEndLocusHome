@@ -15,6 +15,8 @@ public record CrearFacturaRequest
 
     public DateTime? FechaPago { get; init; }
 
+    public string? IdempotencyKey { get; init; }
+
     [Required]
     [MinLength(1, ErrorMessage = "Debe haber al menos un detalle en la factura.")]
     public List<CrearDetalleFacturaRequest> Detalles { get; init; } = new();

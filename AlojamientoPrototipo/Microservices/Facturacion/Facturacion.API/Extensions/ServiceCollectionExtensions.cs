@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
     {
         // ── DataAccess ──────────────────────────────────
         services.AddScoped<IFacturasRepository, FacturasRepository>();
+        services.AddScoped<IIdempotentRequestsRepository, IdempotentRequestsRepository>();
         services.AddScoped<IDetalleFacturasRepository, DetalleFacturasRepository>();
         services.AddScoped<IMetodosPagoRepository, MetodosPagoRepository>();
         services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
@@ -21,6 +22,7 @@ public static class ServiceCollectionExtensions
         // ── DataManagement ──────────────────────────────
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IFacturasDataService, FacturasDataService>();
+        services.AddScoped<IIdempotentRequestDataService, IdempotentRequestDataService>();
         services.AddScoped<IMetodosPagoDataService, MetodosPagoDataService>();
         services.AddScoped<IAuditoriaDataService, AuditoriaDataService>();
 

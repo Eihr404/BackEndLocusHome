@@ -30,6 +30,8 @@ public class ExceptionHandlingMiddleware
         {
             FacturaNotFoundException => HttpStatusCode.NotFound,
             MontoInvalidoException => HttpStatusCode.BadRequest,
+            DuplicateOperationInProgressException => HttpStatusCode.Conflict,
+            IdempotencyKeyReuseException => HttpStatusCode.Conflict,
             KeyNotFoundException => HttpStatusCode.NotFound,
             _ => HttpStatusCode.InternalServerError
         };

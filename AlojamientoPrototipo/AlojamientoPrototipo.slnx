@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/ApiGateway/">
     <Project Path="ApiGateway/ApiGateway/ApiGateway.csproj" />
+    <Project Path="ApiGateway/GraphQLGateway/GraphQLGateway.csproj" />
+  </Folder>
+  <Folder Name="/Integrations/">
+    <Project Path="Integrations/SoapFacturaGateway/SoapFacturaGateway.csproj" />
   </Folder>
   <Folder Name="/EventBus/">
     <Project Path="EventBus/EventBus.Contracts/EventBus.Contracts.csproj" />

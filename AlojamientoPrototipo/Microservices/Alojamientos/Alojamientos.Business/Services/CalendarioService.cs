@@ -86,6 +86,40 @@ public class CalendarioService : ICalendarioService
         }
     }
 
+    public async Task<IEnumerable<CalendarioResponse>> LiberarFechasAsync(BloquearFechasRequest request)
+    {
+        if (request.FechaFin < request.FechaInicio)
+            throw new BusinessRuleException("La fecha de fin debe ser mayor o igual a la fecha de inicio.");
+
+        var habitacion = await _habitacionesDataService.GetByIdAsync(request.HabitacionId);
+        if (habitacion == null) throw new NotFoundException($"Habitación {request.HabitacionId} no encontrada.");
+
+        await _unitOfWork.BeginTransactionAsync();
+        try
+        {
+            var result = await _calendarioDataService.DeleteRangeAsync(
+                request.HabitacionId,
+                request.FechaInicio,
+                request.FechaFin,
+                "Bloqueado");
+
+            await _unitOfWork.CommitTransactionAsync();
+
+            return result.Select(c => new CalendarioResponse
+            {
+                CalendarioId = c.CalendarioId,
+                HabitacionId = c.HabitacionId,
+                Fecha = c.Fecha,
+                Estado = c.Estado
+            });
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync();
+            throw;
+        }
+    }
+
     public async Task<bool> VerificarDisponibilidadAsync(int habitacionId, DateOnly fechaInicio, DateOnly fechaFin)
     {
         // Usa directamente la consulta SQL optimizada en lugar de traer todo el mes

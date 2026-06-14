@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using Facturacion.Business.DTOs;
 using Facturacion.Business.Exceptions;
 using Facturacion.Business.Interfaces;
@@ -5,27 +8,35 @@ using Facturacion.Business.Mappers;
 using Facturacion.DataManagement.Interfaces;
 using Facturacion.DataManagement.Models;
 using MassTransit;
+using Shared.Kernel.Correlation;
 using Shared.Kernel.Events;
 
 namespace Facturacion.Business.Services;
 
 public class FacturasService : IFacturasService
 {
+    private const string CreateOperationName = "CrearFactura";
     private readonly IFacturasDataService _facturasDataService;
+    private readonly IIdempotentRequestDataService _idempotentRequestDataService;
     private readonly IAuditoriaDataService _auditoriaDataService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly CorrelationContextAccessor _correlationAccessor;
 
     public FacturasService(
         IFacturasDataService facturasDataService,
+        IIdempotentRequestDataService idempotentRequestDataService,
         IAuditoriaDataService auditoriaDataService,
         IUnitOfWork unitOfWork,
-        IPublishEndpoint publishEndpoint)
+        IPublishEndpoint publishEndpoint,
+        CorrelationContextAccessor correlationAccessor)
     {
         _facturasDataService = facturasDataService;
+        _idempotentRequestDataService = idempotentRequestDataService;
         _auditoriaDataService = auditoriaDataService;
         _unitOfWork = unitOfWork;
         _publishEndpoint = publishEndpoint;
+        _correlationAccessor = correlationAccessor;
     }
 
     public async Task<FacturaResponse> GetByIdAsync(int id)
@@ -49,7 +60,15 @@ public class FacturasService : IFacturasService
 
     public async Task<FacturaResponse> CrearAsync(CrearFacturaRequest request)
     {
-        // Validación de negocio adicional
+        var idempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
+        var requestHash = ComputeRequestHash(request);
+
+        var idempotentResponse = await TryResolveIdempotentResponseAsync(idempotencyKey, requestHash);
+        if (idempotentResponse != null)
+        {
+            return idempotentResponse;
+        }
+
         decimal totalCalculado = request.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario);
         if (request.Monto != totalCalculado)
         {
@@ -76,9 +95,24 @@ public class FacturasService : IFacturasService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
+            if (idempotencyKey != null)
+            {
+                var createdPending = await _idempotentRequestDataService.TryCreatePendingAsync(new IdempotentRequestDataModel
+                {
+                    IdempotencyKey = idempotencyKey,
+                    OperationName = CreateOperationName,
+                    RequestHash = requestHash,
+                    Status = "Pending"
+                });
+
+                if (!createdPending)
+                {
+                    return await ResolveConcurrentDuplicateAsync(idempotencyKey, requestHash);
+                }
+            }
+
             var created = await _facturasDataService.CreateAsync(model);
 
-            // Registrar en Auditoría
             await _auditoriaDataService.RegistrarAccionAsync(new AuditoriaGeneralDataModel
             {
                 NombreTabla = "Facturas",
@@ -89,7 +123,28 @@ public class FacturasService : IFacturasService
                 Origen = "FacturasService.CrearAsync"
             });
 
+            if (idempotencyKey != null)
+            {
+                await _idempotentRequestDataService.MarkCompletedAsync(
+                    CreateOperationName,
+                    idempotencyKey,
+                    created.FacturaId);
+            }
+
             await _unitOfWork.CommitTransactionAsync();
+
+            var pagoPendiente = EventFactory.ApplyMetadata(new PagoPendienteEvent
+            {
+                ReservaId = created.ReservaId,
+                FacturaId = created.FacturaId,
+                Monto = created.Monto
+            }, "Facturacion.API", _correlationAccessor);
+
+            await _publishEndpoint.Publish(pagoPendiente, publishContext =>
+            {
+                publishContext.Headers.Set(CorrelationConstants.HeaderName, pagoPendiente.CorrelationId);
+            });
+
             return await GetByIdAsync(created.FacturaId);
         }
         catch
@@ -99,12 +154,80 @@ public class FacturasService : IFacturasService
         }
     }
 
+    private async Task<FacturaResponse?> TryResolveIdempotentResponseAsync(string? idempotencyKey, string requestHash)
+    {
+        if (idempotencyKey == null)
+        {
+            return null;
+        }
+
+        var existing = await _idempotentRequestDataService.GetByKeyAsync(CreateOperationName, idempotencyKey);
+        if (existing == null)
+        {
+            return null;
+        }
+
+        ValidateRequestHash(existing.RequestHash, requestHash);
+
+        if (string.Equals(existing.Status, "Completed", StringComparison.OrdinalIgnoreCase) && existing.ResourceId.HasValue)
+        {
+            return await GetByIdAsync(existing.ResourceId.Value);
+        }
+
+        throw new DuplicateOperationInProgressException(CreateOperationName);
+    }
+
+    private async Task<FacturaResponse> ResolveConcurrentDuplicateAsync(string idempotencyKey, string requestHash)
+    {
+        var existing = await _idempotentRequestDataService.GetByKeyAsync(CreateOperationName, idempotencyKey)
+            ?? throw new DuplicateOperationInProgressException(CreateOperationName);
+
+        ValidateRequestHash(existing.RequestHash, requestHash);
+
+        if (string.Equals(existing.Status, "Completed", StringComparison.OrdinalIgnoreCase) && existing.ResourceId.HasValue)
+        {
+            return await GetByIdAsync(existing.ResourceId.Value);
+        }
+
+        throw new DuplicateOperationInProgressException(CreateOperationName);
+    }
+
+    private static void ValidateRequestHash(string existingHash, string incomingHash)
+    {
+        if (!string.Equals(existingHash, incomingHash, StringComparison.Ordinal))
+        {
+            throw new IdempotencyKeyReuseException(CreateOperationName);
+        }
+    }
+
+    private static string? NormalizeIdempotencyKey(string? idempotencyKey)
+        => string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
+
+    private static string ComputeRequestHash(CrearFacturaRequest request)
+    {
+        var canonicalPayload = JsonSerializer.Serialize(new
+        {
+            request.ReservaId,
+            request.MetodoPagoId,
+            request.Monto,
+            FechaPago = NormalizeToUtc(request.FechaPago),
+            Detalles = request.Detalles
+                .Select(x => new { x.Descripcion, x.Cantidad, x.PrecioUnitario })
+                .OrderBy(x => x.Descripcion)
+                .ThenBy(x => x.Cantidad)
+                .ThenBy(x => x.PrecioUnitario)
+                .ToList()
+        });
+
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(canonicalPayload));
+        return Convert.ToHexString(bytes);
+    }
+
     public async Task AprobarFacturaAsync(int id)
     {
         await _unitOfWork.BeginTransactionAsync();
         try
         {
-            // Obtener la factura para conocer el ReservaId y Monto
             var factura = await _facturasDataService.GetByIdAsync(id)
                 ?? throw new FacturaNotFoundException(id);
 
@@ -122,13 +245,30 @@ public class FacturasService : IFacturasService
 
             await _unitOfWork.CommitTransactionAsync();
 
-            // ── Publicar evento asíncrono a RabbitMQ (CloudAMQP) ──
-            await _publishEndpoint.Publish(new FacturaPagadaEvent
+            var facturaPagada = EventFactory.ApplyMetadata(new FacturaPagadaEvent
             {
                 ReservaId = factura.ReservaId,
                 FacturaId = factura.FacturaId,
                 MontoPagado = factura.Monto,
                 FechaPago = DateTime.UtcNow
+            }, "Facturacion.API", _correlationAccessor);
+
+            await _publishEndpoint.Publish(facturaPagada, publishContext =>
+            {
+                publishContext.Headers.Set(CorrelationConstants.HeaderName, facturaPagada.CorrelationId);
+            });
+
+            var pagoAprobado = EventFactory.ApplyMetadata(new PagoAprobadoEvent
+            {
+                ReservaId = factura.ReservaId,
+                FacturaId = factura.FacturaId,
+                MontoPagado = factura.Monto,
+                FechaPago = DateTime.UtcNow
+            }, "Facturacion.API", _correlationAccessor);
+
+            await _publishEndpoint.Publish(pagoAprobado, publishContext =>
+            {
+                publishContext.Headers.Set(CorrelationConstants.HeaderName, pagoAprobado.CorrelationId);
             });
         }
         catch
@@ -143,6 +283,9 @@ public class FacturasService : IFacturasService
         await _unitOfWork.BeginTransactionAsync();
         try
         {
+            var factura = await _facturasDataService.GetByIdAsync(id)
+                ?? throw new FacturaNotFoundException(id);
+
             await _facturasDataService.UpdateStatusAsync(id, "Rechazado");
 
             await _auditoriaDataService.RegistrarAccionAsync(new AuditoriaGeneralDataModel
@@ -156,6 +299,18 @@ public class FacturasService : IFacturasService
             });
 
             await _unitOfWork.CommitTransactionAsync();
+
+            var pagoRechazado = EventFactory.ApplyMetadata(new PagoRechazadoEvent
+            {
+                ReservaId = factura.ReservaId,
+                FacturaId = factura.FacturaId,
+                Motivo = "Factura rechazada"
+            }, "Facturacion.API", _correlationAccessor);
+
+            await _publishEndpoint.Publish(pagoRechazado, publishContext =>
+            {
+                publishContext.Headers.Set(CorrelationConstants.HeaderName, pagoRechazado.CorrelationId);
+            });
         }
         catch
         {

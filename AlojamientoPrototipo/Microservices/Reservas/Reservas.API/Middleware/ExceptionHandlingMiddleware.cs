@@ -31,6 +31,9 @@ public class ExceptionHandlingMiddleware
             ReservaNotFoundException => HttpStatusCode.NotFound,
             FechasInvalidasException => HttpStatusCode.BadRequest,
             DescuentoInvalidoException => HttpStatusCode.BadRequest,
+            BusinessRuleException => HttpStatusCode.Conflict,
+            DuplicateOperationInProgressException => HttpStatusCode.Conflict,
+            IdempotencyKeyReuseException => HttpStatusCode.Conflict,
             KeyNotFoundException => HttpStatusCode.NotFound,
             _ => HttpStatusCode.InternalServerError
         };

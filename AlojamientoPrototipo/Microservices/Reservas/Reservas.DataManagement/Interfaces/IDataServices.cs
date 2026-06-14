@@ -16,3 +16,10 @@ public interface IDescuentosDataService
 {
     Task<DescuentoDataModel?> GetByCodigoAsync(string codigo);
 }
+
+public interface IIdempotentRequestDataService
+{
+    Task<IdempotentRequestDataModel?> GetByKeyAsync(string operationName, string idempotencyKey);
+    Task<bool> TryCreatePendingAsync(IdempotentRequestDataModel model);
+    Task MarkCompletedAsync(string operationName, string idempotencyKey, int resourceId);
+}

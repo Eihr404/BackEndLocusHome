@@ -28,4 +28,11 @@ public class CalendarioController : ControllerBase
         var result = await _service.BloquearFechasAsync(request);
         return Ok(result);
     }
+
+    [HttpPost("liberar")]
+    public async Task<IActionResult> LiberarFechas([FromBody] BloquearFechasRequest request)
+    {
+        var result = await _service.LiberarFechasAsync(request);
+        return Ok(result);
+    }
 }

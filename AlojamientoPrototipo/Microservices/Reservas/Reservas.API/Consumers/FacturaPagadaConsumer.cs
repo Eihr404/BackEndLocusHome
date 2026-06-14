@@ -1,49 +1,60 @@
 using MassTransit;
+using Reservas.Business.Interfaces;
+using Shared.Kernel.Correlation;
 using Shared.Kernel.Events;
-using Reservas.DataManagement.Interfaces;
 
 namespace Reservas.API.Consumers;
 
-/// <summary>
-/// Consumidor que escucha el evento FacturaPagadaEvent emitido por el microservicio de Facturación.
-/// Al recibir este evento, actualiza el estado de la reserva de "Pendiente" a "Confirmada".
-/// </summary>
 public class FacturaPagadaConsumer : IConsumer<FacturaPagadaEvent>
 {
-    private readonly IReservasDataService _reservasDataService;
+    private readonly IReservasService _reservasService;
+    private readonly CorrelationContextAccessor _correlationAccessor;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<FacturaPagadaConsumer> _logger;
 
     public FacturaPagadaConsumer(
-        IReservasDataService reservasDataService,
+        IReservasService reservasService,
+        CorrelationContextAccessor correlationAccessor,
+        IPublishEndpoint publishEndpoint,
         ILogger<FacturaPagadaConsumer> logger)
     {
-        _reservasDataService = reservasDataService;
+        _reservasService = reservasService;
+        _correlationAccessor = correlationAccessor;
+        _publishEndpoint = publishEndpoint;
         _logger = logger;
     }
 
     public async Task Consume(ConsumeContext<FacturaPagadaEvent> context)
     {
         var evento = context.Message;
+        _correlationAccessor.CorrelationId = evento.CorrelationId;
 
         _logger.LogInformation(
-            "📩 Evento FacturaPagadaEvent recibido: ReservaId={ReservaId}, FacturaId={FacturaId}, Monto={Monto}",
-            evento.ReservaId, evento.FacturaId, evento.MontoPagado);
+            "Evento FacturaPagadaEvent recibido: ReservaId={ReservaId}, FacturaId={FacturaId}, Monto={Monto}, CorrelationId={CorrelationId}",
+            evento.ReservaId, evento.FacturaId, evento.MontoPagado, evento.CorrelationId);
 
-        try
+        var procesado = await _reservasService.ConfirmarReservaPorPagoAsync(evento.ReservaId);
+        if (!procesado)
         {
-            // Actualizar estado de la reserva a "Confirmada"
-            await _reservasDataService.UpdateStatusAsync(evento.ReservaId, "Confirmada");
-
             _logger.LogInformation(
-                "✅ Reserva {ReservaId} actualizada a 'Confirmada' tras pago de factura {FacturaId}",
-                evento.ReservaId, evento.FacturaId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex,
-                "❌ Error al procesar FacturaPagadaEvent para ReservaId={ReservaId}",
+                "FacturaPagadaEvent ignorado por guard de estado. ReservaId={ReservaId}, Estado no pendiente.",
                 evento.ReservaId);
-            throw; // MassTransit reintentará según su política de retry
+            return;
         }
+
+        var reservaConfirmada = EventFactory.ApplyMetadata(new ReservaConfirmadaEvent
+        {
+            ReservaId = evento.ReservaId,
+            FacturaId = evento.FacturaId
+        }, "Reservas.API", _correlationAccessor);
+
+        await _publishEndpoint.Publish(reservaConfirmada, publishContext =>
+        {
+            publishContext.Headers.Set(CorrelationConstants.HeaderName, reservaConfirmada.CorrelationId);
+        }, context.CancellationToken);
+
+        _logger.LogInformation(
+            "Reserva {ReservaId} actualizada a Confirmada tras pago de factura {FacturaId}",
+            evento.ReservaId, evento.FacturaId);
     }
 }

@@ -1,12 +1,14 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Reservas.API.Integrations;
+using Reservas.API.Idempotency;
 using Reservas.Business.Interfaces;
 using Reservas.Business.Services;
 using Reservas.DataAccess.Repositories;
 using Reservas.DataAccess.Repositories.Interfaces;
 using Reservas.DataManagement.Interfaces;
 using Reservas.DataManagement.Services;
+using Shared.Kernel.Observability;
 
 namespace Reservas.API.Extensions;
 
@@ -14,13 +16,17 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddSharedObservability("Reservas.API");
         services.AddScoped<IReservasRepository, ReservasRepository>();
         services.AddScoped<IDescuentosRepository, DescuentosRepository>();
         services.AddScoped<IReservaDetallesRepository, ReservaDetallesRepository>();
+        services.AddScoped<IIdempotentRequestsRepository, IdempotentRequestsRepository>();
+        services.AddScoped<IProcessedMessageStore, ProcessedMessageStore>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IReservasDataService, ReservasDataService>();
         services.AddScoped<IDescuentosDataService, DescuentosDataService>();
+        services.AddScoped<IIdempotentRequestDataService, IdempotentRequestDataService>();
 
         services.AddScoped<IReservasService, ReservasService>();
 
@@ -40,7 +46,8 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<CalendarioGateway>(client =>
         {
             client.BaseAddress = new Uri(alojamientosApiUrl);
-        });
+        })
+        .AddHttpMessageHandler<HttpCorrelationDelegatingHandler>();
 
         services.AddScoped<ICalendarioGateway>(serviceProvider =>
             serviceProvider.GetRequiredService<CalendarioGateway>());

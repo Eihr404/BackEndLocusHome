@@ -110,4 +110,50 @@ public class CalendarioGrpcService : CalendarioGrpc.CalendarioGrpcBase
             };
         }
     }
+
+    public override async Task<LiberarFechasResponse> LiberarFechas(LiberarFechasRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (!DateOnly.TryParse(request.FechaInicio, out var fechaInicio))
+            {
+                return new LiberarFechasResponse
+                {
+                    Exito = false,
+                    Mensaje = $"FechaInicio invalida: {request.FechaInicio}"
+                };
+            }
+
+            if (!DateOnly.TryParse(request.FechaFin, out var fechaFin))
+            {
+                return new LiberarFechasResponse
+                {
+                    Exito = false,
+                    Mensaje = $"FechaFin invalida: {request.FechaFin}"
+                };
+            }
+
+            await _calendarioService.LiberarFechasAsync(new Alojamientos.Business.DTOs.BloquearFechasRequest
+            {
+                HabitacionId = request.HabitacionId,
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin
+            });
+
+            return new LiberarFechasResponse
+            {
+                Exito = true,
+                Mensaje = "Fechas liberadas correctamente."
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al liberar fechas por gRPC para habitacion {HabitacionId}", request.HabitacionId);
+            return new LiberarFechasResponse
+            {
+                Exito = false,
+                Mensaje = ex.Message
+            };
+        }
+    }
 }

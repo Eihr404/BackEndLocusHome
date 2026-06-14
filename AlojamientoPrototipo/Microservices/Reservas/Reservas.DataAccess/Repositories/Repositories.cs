@@ -45,3 +45,17 @@ public class ReservaDetallesRepository : RepositoryBase<ReservaDetalleHabitacion
 {
     public ReservaDetallesRepository(ReservasDbContext context) : base(context) { }
 }
+
+public class IdempotentRequestsRepository : RepositoryBase<IdempotentRequestEntity>, IIdempotentRequestsRepository
+{
+    private readonly ReservasDbContext _reservasContext;
+
+    public IdempotentRequestsRepository(ReservasDbContext context) : base(context)
+    {
+        _reservasContext = context;
+    }
+
+    public Task<IdempotentRequestEntity?> GetByKeyAsync(string operationName, string idempotencyKey)
+        => _reservasContext.IdempotentRequests.FirstOrDefaultAsync(
+            x => x.OperationName == operationName && x.IdempotencyKey == idempotencyKey);
+}

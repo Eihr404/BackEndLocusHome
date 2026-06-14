@@ -9,6 +9,7 @@ package calendario;
 service CalendarioGrpc {
   rpc VerificarDisponibilidad (DisponibilidadRequest) returns (DisponibilidadResponse);
   rpc BloquearFechas (BloqueoFechasRequest) returns (BloqueoFechasResponse);
+  rpc LiberarFechas (LiberarFechasRequest) returns (LiberarFechasResponse);
 }
 
 message DisponibilidadRequest {
@@ -29,6 +30,17 @@ message BloqueoFechasRequest {
 }
 
 message BloqueoFechasResponse {
+  bool exito = 1;
+  string mensaje = 2;
+}
+
+message LiberarFechasRequest {
+  int32 habitacion_id = 1;
+  string fecha_inicio = 2;
+  string fecha_fin = 3;
+}
+
+message LiberarFechasResponse {
   bool exito = 1;
   string mensaje = 2;
 }

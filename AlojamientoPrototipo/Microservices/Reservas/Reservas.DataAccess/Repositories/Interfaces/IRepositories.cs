@@ -18,3 +18,7 @@ public interface IRepositoryBase<T> where T : class
 public interface IReservasRepository : IRepositoryBase<ReservaEntity> { }
 public interface IDescuentosRepository : IRepositoryBase<DescuentoEntity> { }
 public interface IReservaDetallesRepository : IRepositoryBase<ReservaDetalleHabitacionEntity> { }
+public interface IIdempotentRequestsRepository : IRepositoryBase<IdempotentRequestEntity>
+{
+    Task<IdempotentRequestEntity?> GetByKeyAsync(string operationName, string idempotencyKey);
+}

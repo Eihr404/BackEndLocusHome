@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="http://schemas.locushome/facturacion"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="http://schemas.locushome/facturacion">
+  <types>
+    <xsd:schema targetNamespace="http://schemas.locushome/facturacion">
+      <xsd:element name="GenerarFactura">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="FacturaId" type="xsd:int" />
+            <xsd:element name="ReservaId" type="xsd:int" />
+            <xsd:element name="Monto" type="xsd:decimal" />
+            <xsd:element name="MetodoPago" type="xsd:string" />
+            <xsd:element name="FechaPago" type="xsd:string" minOccurs="0" />
+            <xsd:element name="CorrelationId" type="xsd:string" minOccurs="0" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GenerarFacturaResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Estado" type="xsd:string" />
+            <xsd:element name="FacturaXml" type="xsd:string" />
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </types>
+  <message name="GenerarFacturaSoapIn">
+    <part name="parameters" element="tns:GenerarFactura" />
+  </message>
+  <message name="GenerarFacturaSoapOut">
+    <part name="parameters" element="tns:GenerarFacturaResponse" />
+  </message>
+  <portType name="FacturacionSoapPortType">
+    <operation name="GenerarFactura">
+      <input message="tns:GenerarFacturaSoapIn" />
+      <output message="tns:GenerarFacturaSoapOut" />
+    </operation>
+  </portType>
+  <binding name="FacturacionSoapBinding" type="tns:FacturacionSoapPortType">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document" />
+    <operation name="GenerarFactura">
+      <soap:operation soapAction="http://schemas.locushome/facturacion/GenerarFactura" />
+      <input><soap:body use="literal" /></input>
+      <output><soap:body use="literal" /></output>
+    </operation>
+  </binding>
+  <service name="FacturacionSoapService">
+    <port name="FacturacionSoapPort" binding="tns:FacturacionSoapBinding">
+      <soap:address location="http://localhost:5096/soap/facturacion" />
+    </port>
+  </service>
+</definitions>

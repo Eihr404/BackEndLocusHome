@@ -3,23 +3,21 @@ using Facturacion.DataAccess.Contexts;
 using Facturacion.API.Extensions;
 using Facturacion.API.Middleware;
 using MassTransit;
+using Shared.Kernel.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ── 1. Base de datos ─────────────────────────────────
 builder.Services.AddDbContext<FacturacionDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("ConexionFacturacion"))
            .UseLowerCaseNamingConvention());
 
-// ── 2. Dependencias de la Aplicación ─────────────────
 builder.Services.AddApplicationServices();
+builder.Services.AddSharedObservability("Facturacion.API");
 
-// ── Event Bus (MassTransit + RabbitMQ) ───────────────
 builder.Services.AddMassTransit(x =>
 {
     x.UsingRabbitMq((context, cfg) =>
     {
-        // Se espera "amqps://user:pass@host/vhost" desde appsettings.json o variables de entorno
         var rmqUrl = builder.Configuration.GetConnectionString("RabbitMQ");
         if (!string.IsNullOrEmpty(rmqUrl))
         {
@@ -27,41 +25,32 @@ builder.Services.AddMassTransit(x =>
         }
         else
         {
-            // Fallback para desarrollo local si no hay nube configurada
             cfg.Host("localhost", "/", h =>
             {
                 h.Username("guest");
                 h.Password("guest");
             });
         }
-        
+
+        cfg.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(2)));
         cfg.ConfigureEndpoints(context);
     });
 });
 
-// ── 3. Presentación (Controllers) ────────────────────
 builder.Services.AddControllers();
-
-// ── 4. Infraestructura Web (Swagger & CORS) ──────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCustomSwagger();
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
 
-// ── Pipeline ─────────────────────────────────────────
-
-// Manejo Global de Excepciones
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Swagger
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// CORS
 app.UseCors();
-
-// Mapeo de Controladores
 app.MapControllers();
 
 app.Run();

@@ -3,6 +3,7 @@ using Reservas.DataAccess.Contexts;
 using Reservas.API.Extensions;
 using Reservas.API.Middleware;
 using MassTransit;
+using Shared.Kernel.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,8 +18,8 @@ builder.Services.AddApplicationServices(builder.Configuration);
 // ── Event Bus (MassTransit + RabbitMQ / CloudAMQP) ───
 builder.Services.AddMassTransit(x =>
 {
-    // Registrar el consumidor de FacturaPagadaEvent
     x.AddConsumer<Reservas.API.Consumers.FacturaPagadaConsumer>();
+    x.AddConsumer<Reservas.API.Consumers.PagoRechazadoConsumer>();
 
     x.UsingRabbitMq((context, cfg) =>
     {
@@ -36,6 +37,8 @@ builder.Services.AddMassTransit(x =>
             });
         }
 
+        cfg.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(2)));
+        cfg.UseInMemoryOutbox(context);
         cfg.ConfigureEndpoints(context);
     });
 });
@@ -49,6 +52,8 @@ builder.Services.AddCustomSwagger();
 builder.Services.AddCustomCors();
 
 var app = builder.Build();
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 // ── Pipeline ─────────────────────────────────────────
 

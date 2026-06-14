@@ -11,12 +11,10 @@ namespace Alojamientos.API.Controllers.V1;
 public class FotosController : ControllerBase
 {
     private readonly IFotosService _service;
-    private readonly ICloudinaryUploadService _cloudinaryUploadService;
 
-    public FotosController(IFotosService service, ICloudinaryUploadService cloudinaryUploadService)
+    public FotosController(IFotosService service)
     {
         _service = service;
-        _cloudinaryUploadService = cloudinaryUploadService;
     }
 
     [HttpGet("alojamiento/{alojamientoId}")]
@@ -33,7 +31,8 @@ public class FotosController : ControllerBase
     [HttpPost("cloudinary")]
     public async Task<IActionResult> AgregarDesdeCloudinary([FromBody] SubirFotoCloudinaryRequest request, CancellationToken cancellationToken)
     {
-        var secureUrl = await _cloudinaryUploadService.UploadImageFromUrlAsync(request.SourceUrl, cancellationToken);
+        var cloudinaryUploadService = HttpContext.RequestServices.GetRequiredService<ICloudinaryUploadService>();
+        var secureUrl = await cloudinaryUploadService.UploadImageFromUrlAsync(request.SourceUrl, cancellationToken);
         var result = await _service.AgregarAsync(new AgregarFotoRequest(
             request.AlojamientoId,
             secureUrl,
@@ -51,6 +50,7 @@ public class FotosController : ControllerBase
         [FromForm] SubirFotoCloudinaryArchivoRequest request,
         CancellationToken cancellationToken = default)
     {
+        var cloudinaryUploadService = HttpContext.RequestServices.GetRequiredService<ICloudinaryUploadService>();
         var archivo = request.Archivo;
         if (archivo is null || archivo.Length == 0)
         {
@@ -61,7 +61,7 @@ public class FotosController : ControllerBase
         try
         {
             await using var stream = archivo.OpenReadStream();
-            secureUrl = await _cloudinaryUploadService.UploadImageAsync(
+            secureUrl = await cloudinaryUploadService.UploadImageAsync(
                 stream,
                 archivo.FileName,
                 archivo.ContentType,

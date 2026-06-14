@@ -11,5 +11,6 @@ public record CrearReservaRequest(
     int NumNinos = 0,
     bool LlevaMascotas = false,
     string? CodigoDescuento = null,
+    string? IdempotencyKey = null,
     [Required] List<DetalleHabitacionRequest> Habitaciones = null!
 );
